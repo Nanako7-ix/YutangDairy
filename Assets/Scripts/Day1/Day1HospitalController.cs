@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public sealed class Day1HospitalController : MonoBehaviour
 {
+    private const string LegacyDay2Scene = "Day2_LancingStep";
+    private const string SplitDay2EntryScene = "Day2_Stage1_PenAssembly";
+    private const string Day2FallbackScene = "Day2_Home";
+
     private static readonly string[] DialogueLines =
     {
         "医生：你好，先不用紧张。今天我们从记录日常状态和生活选择开始。",
@@ -27,7 +31,7 @@ public sealed class Day1HospitalController : MonoBehaviour
     [Header("Flow")]
     [SerializeField] private float interactionDistance = 2.2f;
     [SerializeField] private bool zoneTriggerUsesXZOnly = true;
-    [SerializeField] private string nextSceneName = "Day2_Home";
+    [SerializeField] private string nextSceneName = "Day2_Stage1_PenAssembly";
 
     private Day1CameraFollow cameraFollow;
     private int dialogueIndex;
@@ -36,6 +40,8 @@ public sealed class Day1HospitalController : MonoBehaviour
 
     private void Awake()
     {
+        nextSceneName = NormalizeNextSceneName(nextSceneName);
+
         RenderSettings.ambientMode = AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.36f, 0.39f, 0.42f, 1f);
 
@@ -168,7 +174,7 @@ public sealed class Day1HospitalController : MonoBehaviour
         dialogueIndex++;
         if (dialogueIndex >= DialogueLines.Length)
         {
-            SceneManager.LoadScene(nextSceneName);
+            LoadNextDayScene();
             return;
         }
 
@@ -188,5 +194,98 @@ public sealed class Day1HospitalController : MonoBehaviour
                 ? "进入下一阶段"
                 : "继续";
         }
+    }
+
+    private static string NormalizeNextSceneName(string requestedScene)
+    {
+        if (string.IsNullOrWhiteSpace(requestedScene))
+        {
+            return SplitDay2EntryScene;
+        }
+
+        return requestedScene == LegacyDay2Scene ? SplitDay2EntryScene : requestedScene;
+    }
+
+    private void LoadNextDayScene()
+    {
+        string normalizedRequested = NormalizeNextSceneName(nextSceneName);
+        string[] candidates =
+        {
+            normalizedRequested,
+            SplitDay2EntryScene,
+            Day2FallbackScene
+        };
+
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            string sceneName = candidates[i];
+            if (string.IsNullOrWhiteSpace(sceneName) || IsDuplicateCandidate(candidates, i, sceneName))
+            {
+                continue;
+            }
+
+            if (!IsSceneInBuildSettings(sceneName))
+            {
+                continue;
+            }
+
+            SceneManager.LoadScene(sceneName);
+            return;
+        }
+
+        for (int i = 0; i < candidates.Length; i++)
+        {
+            string sceneName = candidates[i];
+            if (string.IsNullOrWhiteSpace(sceneName) || IsDuplicateCandidate(candidates, i, sceneName))
+            {
+                continue;
+            }
+
+            try
+            {
+                SceneManager.LoadScene(sceneName);
+                return;
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogWarning("[Day1HospitalController] LoadScene failed: " + sceneName + " -> " + exception.Message);
+            }
+        }
+
+        Debug.LogError("[Day1HospitalController] Unable to load a valid Day2 scene. Checked: " + normalizedRequested + ", " + SplitDay2EntryScene + ", " + Day2FallbackScene);
+    }
+
+    private static bool IsDuplicateCandidate(string[] candidates, int currentIndex, string sceneName)
+    {
+        for (int i = 0; i < currentIndex; i++)
+        {
+            if (candidates[i] == sceneName)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsSceneInBuildSettings(string sceneName)
+    {
+        int sceneCount = SceneManager.sceneCountInBuildSettings;
+        for (int i = 0; i < sceneCount; i++)
+        {
+            string scenePath = SceneUtility.GetScenePathByBuildIndex(i);
+            if (string.IsNullOrWhiteSpace(scenePath))
+            {
+                continue;
+            }
+
+            string scenePathName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+            if (scenePathName == sceneName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

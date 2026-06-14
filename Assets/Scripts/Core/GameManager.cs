@@ -109,6 +109,11 @@ public sealed class GameManager : MonoBehaviour
                 CurrentDay = 1;
                 break;
             case "Day2_Home":
+            case "Day2_LancingStep":
+            case "Day2_Stage1_PenAssembly":
+            case "Day2_Stage2_InsertStrip":
+            case "Day2_Stage3_Puncture":
+            case "Day2_Stage4_SpaceMiniGame":
                 CurrentDay = 2;
                 break;
             case "Day3_Home":

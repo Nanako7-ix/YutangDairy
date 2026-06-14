@@ -28,6 +28,7 @@ public sealed class Day2HomeController : MonoBehaviour
 
     [Header("Flow")]
     [SerializeField] private string nextSceneName = "MainMenu";
+    [SerializeField] private float autoLoadDelaySeconds = 0.5f;
 
     [Header("Final Step (Old Space Mini Game)")]
     [SerializeField] private float glucoseFallPerSecond = 0.14f;
@@ -67,6 +68,8 @@ public sealed class Day2HomeController : MonoBehaviour
     private float holdTimer;
     private float finalTimer;
     private bool completionRewardGranted;
+    private bool completedSceneLoadQueued;
+    private float completedSceneLoadTimer;
 
     private string statusText;
 
@@ -122,10 +125,7 @@ public sealed class Day2HomeController : MonoBehaviour
                 }
                 break;
             case Phase.Completed:
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-                {
-                    gameManager.LoadScene(nextSceneName);
-                }
+                UpdateCompletedAutoLoad();
                 break;
         }
     }
@@ -189,6 +189,8 @@ public sealed class Day2HomeController : MonoBehaviour
         holdTimer = 0f;
         finalTimer = 0f;
         completionRewardGranted = false;
+        completedSceneLoadQueued = false;
+        completedSceneLoadTimer = 0f;
 
         penPosN = penHomeN;
         tipPosN = PenSocketN();
@@ -258,13 +260,34 @@ public sealed class Day2HomeController : MonoBehaviour
         if (holdTimer >= requiredHoldSeconds)
         {
             phase = Phase.Completed;
-            statusText = "Day2 血糖监测全流程完成！按 Enter 继续。";
+            statusText = "Day2 血糖监测全流程完成！即将自动继续。";
             if (!completionRewardGranted)
             {
                 gameManager.AddScore(finalStepScoreReward);
                 gameManager.AddHealth(finalStepHealthReward);
                 completionRewardGranted = true;
             }
+        }
+    }
+
+    private void UpdateCompletedAutoLoad()
+    {
+        if (string.IsNullOrWhiteSpace(nextSceneName))
+        {
+            return;
+        }
+
+        if (!completedSceneLoadQueued)
+        {
+            completedSceneLoadQueued = true;
+            completedSceneLoadTimer = Mathf.Max(0f, autoLoadDelaySeconds);
+            return;
+        }
+
+        completedSceneLoadTimer -= Time.deltaTime;
+        if (completedSceneLoadTimer <= 0f)
+        {
+            gameManager.LoadScene(nextSceneName);
         }
     }
 
@@ -552,7 +575,8 @@ public sealed class Day2HomeController : MonoBehaviour
         }
         else if (phase == Phase.Completed)
         {
-            GUILayout.Label("按 Enter 继续。");
+            float remain = completedSceneLoadQueued ? Mathf.Max(0f, completedSceneLoadTimer) : Mathf.Max(0f, autoLoadDelaySeconds);
+            GUILayout.Label("即将自动继续（" + remain.ToString("F1") + "s）。");
         }
         else
         {

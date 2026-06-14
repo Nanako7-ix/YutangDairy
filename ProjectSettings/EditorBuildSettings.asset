@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Day1_Hospital.unity
     guid: be2daf76790ac5e40b2294c3109d1923
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Day2_LancingStep.unity
     guid: 5e649f55b03ba534ca5ac35f2e50f5d0
   - enabled: 1
@@ -29,4 +29,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Result.unity
     guid: 04d61d65bf47c5e4c82b99fa302663f6
+  - enabled: 1
+    path: Assets/Scenes/Day2_Stage1_PenAssembly.unity
+    guid: 8fcc81831e8fb4b4aa6643756a13f01c
+  - enabled: 1
+    path: Assets/Scenes/Day2_Stage2_InsertStrip.unity
+    guid: a6395984b4e8ea04bb369f73c7b42c96
+  - enabled: 1
+    path: Assets/Scenes/Day2_Stage3_Puncture.unity
+    guid: 50a045967aad4fd4eacdd847205a466d
+  - enabled: 1
+    path: Assets/Scenes/Day2_Stage4_SpaceMiniGame.unity
+    guid: 5daa04120ea522b428caac98578f1818
   m_configObjects: {}
