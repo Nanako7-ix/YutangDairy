@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: aa0a7650ba2d8e64185cce09523df15b
+  - enabled: 1
+    path: Assets/Scenes/Day1_Hospital.unity
+    guid: be2daf76790ac5e40b2294c3109d1923
+  - enabled: 1
+    path: Assets/Scenes/Day2_LancingStep.unity
+    guid: 5e649f55b03ba534ca5ac35f2e50f5d0
+  - enabled: 1
+    path: Assets/Scenes/Day2_Home.unity
+    guid: 0f0e9b34715d07f4a86ca64b627f7cd8
+  - enabled: 1
+    path: Assets/Scenes/Day3_Home.unity
+    guid: 56a1b785ffcdeb94794d806e73c79d9b
+  - enabled: 1
+    path: Assets/Scenes/Day4_Home.unity
+    guid: c56e8ce699754b044b0ec5783c927592
+  - enabled: 1
+    path: Assets/Scenes/Day5_Rhythm.unity
+    guid: 5e5ad5027e36a2145ad0b67e4dd0b057
+  - enabled: 1
+    path: Assets/Scenes/Result.unity
+    guid: 04d61d65bf47c5e4c82b99fa302663f6
+  m_configObjects: {}

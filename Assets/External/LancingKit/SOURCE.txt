@@ -1,0 +1,12 @@
+Source: RigModels aggregate page for glucose meter/lancing device
+Model page: https://rigmodels.com/model.php?view=Glucose_Meter-3d-model__d515e7c2663e4ace8d76a46885bba960
+Asset hash: d515e7c2663e4ace8d76a46885bba960
+
+This folder contains a decoded OBJ generated from the model.data payload
+and linked base color textures for:
+- Glucose meter
+- Glucose test tip
+- Blood lancet
+- Lancing device
+
+Please review upstream license terms before shipping commercially.

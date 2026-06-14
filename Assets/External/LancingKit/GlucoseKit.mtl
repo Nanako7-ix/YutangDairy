@@ -1,0 +1,35 @@
+newmtl object_0
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+Ns 20.0
+map_Kd RGB_24ff049a4f4047c7bf4664377a25709d_Glucose_Meter_Base_Color.png
+
+newmtl object_1
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+Ns 20.0
+map_Kd RGB_72376fb887254ffa9126e2134151c115_Glucose_Test_TIP_Base_Color.png
+
+newmtl object_2
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+Ns 20.0
+map_Kd RGB_e9b6a5eac4eb451cabcecf7335ab8d3f_Blood_Lancet_Base_Color.png
+
+newmtl object_3
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1.000000
+illum 2
+Ns 20.0
+map_Kd RGB_af3d3e424ebb4e3cb12b3a68d526302d_Lancing_device_Base_Color.png
