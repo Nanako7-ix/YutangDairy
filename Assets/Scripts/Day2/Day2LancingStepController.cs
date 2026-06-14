@@ -40,6 +40,7 @@ public sealed class Day2LancingStepController : MonoBehaviour
     [SerializeField] private float dragPlaneHeight = 0.82f;
     [SerializeField] private float dockThreshold = 0.11f;
     [SerializeField] private float undockThreshold = 0.07f;
+    [SerializeField] private float trayDropThreshold = 0.12f;
     [SerializeField] private float punctureDistance = 0.02f;
     [SerializeField] private float punctureDuration = 0.35f;
     [SerializeField] private bool enableHints;
@@ -95,6 +96,7 @@ public sealed class Day2LancingStepController : MonoBehaviour
             return;
         }
 
+        AutoResolveMissingReferences();
         dragPlane = new Plane(Vector3.up, new Vector3(0f, dragPlaneHeight, 0f));
 
         CacheOriginScale(penCap);
@@ -251,18 +253,22 @@ public sealed class Day2LancingStepController : MonoBehaviour
             case Step.RemovePenCap:
                 if (part == penCap)
                 {
-                    bool removed = Vector3.Distance(penCap.position, penCapDock.position) > undockThreshold;
-                    if (removed)
+                    Vector3 trayCenter = GetTrayPlacementCenter(trayPointA, "TrayA");
+                    bool removedFromDock = penCapDock == null || Vector3.Distance(penCap.position, penCapDock.position) > undockThreshold;
+                    bool droppedInUpperTray = IsWithinTargetRange(penCap, trayCenter, trayDropThreshold);
+
+                    if (droppedInUpperTray)
                     {
-                        MoveTransformPreciseCenterTo(penCap, GetTrayPlacementCenter(trayPointA, "TrayA"));
-                    }
-                    else
-                    {
-                        penCap.position = penCapDock.position;
-                    }
-                    if (removed)
-                    {
+                        MoveTransformPreciseCenterTo(penCap, trayCenter);
                         SetStep(Step.InsertLancet);
+                    }
+                    else if (!removedFromDock && penCapDock != null)
+                    {
+                        SnapPenCapToDock();
+                    }
+                    else if (enableHints && hintText != null)
+                    {
+                        hintText.text = "请把笔帽拖到上方框内再松手。";
                     }
                 }
                 break;
@@ -322,7 +328,7 @@ public sealed class Day2LancingStepController : MonoBehaviour
                     bool attached = Vector3.Distance(penCap.position, penCapDock.position) <= dockThreshold;
                     if (attached)
                     {
-                        penCap.position = penCapDock.position;
+                        SnapPenCapToDock();
                     }
                     else
                     {
@@ -473,7 +479,7 @@ public sealed class Day2LancingStepController : MonoBehaviour
         {
             case Step.RemovePenCap:
                 stepLine = "步骤1/6：先取下采血笔笔帽";
-                hintLine = "把笔帽从笔尖方向拖开，放到左侧托盘。";
+                hintLine = "将笔帽从笔尖拔下后，拖到上方框内。";
                 progressLine = "进度：0%";
                 SetOptionalHintVisible(lancetDockHint, false);
                 SetOptionalHintVisible(triggerButton, false);
@@ -603,6 +609,45 @@ public sealed class Day2LancingStepController : MonoBehaviour
         EnsureMeshColliders(safetyCap);
     }
 
+    private void AutoResolveMissingReferences()
+    {
+        Transform splitBody = FindTransformByName("OriginalLancingDevice_Body");
+        if (splitBody != null)
+        {
+            penBody = splitBody;
+        }
+        else if (penBody == null)
+        {
+            penBody = FindTransformByName("OriginalLancingDevice");
+        }
+
+        Transform splitCap = FindTransformByName("OriginalLancingDevice_Cap");
+        if (splitCap != null)
+        {
+            penCap = splitCap;
+        }
+        else if (penCap == null)
+        {
+            penCap = FindTransformByName("PenCap");
+        }
+
+        if (lancetNeedle == null) lancetNeedle = FindTransformByName("ProcessLancetNeedle");
+        if (safetyCap == null) safetyCap = FindTransformByName("ProcessSafetyCap");
+        if (penCapDock == null) penCapDock = FindTransformByName("PenCapDock");
+        if (lancetDock == null) lancetDock = FindTransformByName("LancetDock");
+        if (trayPointA == null) trayPointA = FindTransformByName("TrayPointA");
+        if (trayPointB == null) trayPointB = FindTransformByName("TrayPointB");
+        if (lancetDockHint == null) lancetDockHint = FindTransformByName("LancetDockHint");
+        if (triggerButton == null) triggerButton = FindTransformByName("TriggerButton");
+        if (punctureNeedleTip == null) punctureNeedleTip = FindTransformByName("PunctureNeedleTip");
+    }
+
+    private static Transform FindTransformByName(string objectName)
+    {
+        GameObject go = GameObject.Find(objectName);
+        return go != null ? go.transform : null;
+    }
+
     private static void EnsureMeshColliders(Transform root)
     {
         if (root == null)
@@ -649,10 +694,7 @@ public sealed class Day2LancingStepController : MonoBehaviour
 
     private void AlignVisualsAtStartup()
     {
-        if (penCap != null && penCapDock != null)
-        {
-            penCap.position = penCapDock.position;
-        }
+        SnapPenCapToDock();
 
         if (safetyCap != null)
         {
@@ -670,25 +712,104 @@ public sealed class Day2LancingStepController : MonoBehaviour
 
     private static bool IsWithinDockRange(Transform moving, Transform dock, float threshold)
     {
-        if (moving == null || dock == null)
+        if (dock == null)
         {
             return false;
         }
 
-        Vector3 dockPos = dock.position;
-        float bestDistance = Vector3.Distance(moving.position, dockPos);
-        Vector2 dockXZ = new Vector2(dockPos.x, dockPos.z);
-        bestDistance = Mathf.Min(bestDistance, Vector2.Distance(new Vector2(moving.position.x, moving.position.z), dockXZ));
+        return IsWithinTargetRange(moving, dock.position, threshold);
+    }
 
+    private static bool IsWithinTargetRange(Transform moving, Vector3 targetPos, float threshold)
+    {
+        if (moving == null)
+        {
+            return false;
+        }
+
+        float bestDistance = Vector3.Distance(moving.position, targetPos);
+        Vector2 targetXZ = new Vector2(targetPos.x, targetPos.z);
+        bestDistance = Mathf.Min(bestDistance, Vector2.Distance(new Vector2(moving.position.x, moving.position.z), targetXZ));
         Renderer renderer = moving.GetComponentInChildren<Renderer>();
         if (renderer != null)
         {
-            Vector3 closest = renderer.bounds.ClosestPoint(dockPos);
-            bestDistance = Mathf.Min(bestDistance, Vector3.Distance(closest, dockPos));
-            bestDistance = Mathf.Min(bestDistance, Vector2.Distance(new Vector2(closest.x, closest.z), dockXZ));
+            Vector3 closest = renderer.bounds.ClosestPoint(targetPos);
+            bestDistance = Mathf.Min(bestDistance, Vector3.Distance(closest, targetPos));
+            bestDistance = Mathf.Min(bestDistance, Vector2.Distance(new Vector2(closest.x, closest.z), targetXZ));
         }
 
         return bestDistance <= threshold;
+    }
+
+    private void SnapPenCapToDock()
+    {
+        if (penCap == null || penBody == null)
+        {
+            return;
+        }
+
+        Vector3 axis = penBody.forward.sqrMagnitude > 0.0001f ? penBody.forward.normalized : Vector3.forward;
+        penCap.rotation = penBody.rotation;
+
+        Vector3 bodyAttachPoint = GetExtremePointAlongDirection(penBody, axis);
+        Vector3 capAttachPoint = GetExtremePointAlongDirection(penCap, -axis);
+        Vector3 delta = bodyAttachPoint - capAttachPoint;
+        penCap.position += delta;
+
+        if (penCapDock != null)
+        {
+            penCapDock.position = penCap.position;
+            penCapDock.rotation = penCap.rotation;
+        }
+    }
+
+    private static Vector3 GetExtremePointAlongDirection(Transform root, Vector3 worldDirection)
+    {
+        if (root == null || worldDirection.sqrMagnitude < 0.0001f)
+        {
+            return root != null ? root.position : Vector3.zero;
+        }
+
+        worldDirection.Normalize();
+        MeshFilter[] filters = root.GetComponentsInChildren<MeshFilter>(true);
+        bool found = false;
+        float bestProj = float.NegativeInfinity;
+        Vector3 bestPoint = root.position;
+
+        for (int i = 0; i < filters.Length; i++)
+        {
+            MeshFilter filter = filters[i];
+            if (filter == null || filter.sharedMesh == null)
+            {
+                continue;
+            }
+
+            Vector3[] vertices = filter.sharedMesh.vertices;
+            Matrix4x4 l2w = filter.transform.localToWorldMatrix;
+            for (int v = 0; v < vertices.Length; v++)
+            {
+                Vector3 world = l2w.MultiplyPoint3x4(vertices[v]);
+                float proj = Vector3.Dot(world, worldDirection);
+                if (!found || proj > bestProj)
+                {
+                    bestProj = proj;
+                    bestPoint = world;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found)
+        {
+            Renderer renderer = root.GetComponentInChildren<Renderer>();
+            if (renderer != null)
+            {
+                Bounds b = renderer.bounds;
+                return b.ClosestPoint(b.center + (worldDirection * 10f));
+            }
+        }
+
+        return bestPoint;
     }
 
     private static void MoveTransformBoundsCenterTo(Transform target, Vector3 center)
