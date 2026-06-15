@@ -150,7 +150,7 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
         float barWidth = 420f;
         float barHeight = 70f;
         float barX = (Screen.width * 0.5f) - (barWidth * 0.5f);
-        float barY = 190f;
+        float barY = (Screen.height * 0.7f) - (barHeight * 0.5f);
         Rect bar = new Rect(barX, barY, barWidth, barHeight);
 
         Color prev = GUI.color;

@@ -41,4 +41,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Day2_Stage4_SpaceMiniGame.unity
     guid: 5daa04120ea522b428caac98578f1818
+  - enabled: 1
+    path: Assets/Scenes/Day2_DietMatch_Lunch.unity
+    guid: c89390d634b2c3b41908c55ee06afdbb
   m_configObjects: {}
