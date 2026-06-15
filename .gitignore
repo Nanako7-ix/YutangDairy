@@ -35,6 +35,12 @@
 .DS_Store
 Thumbs.db
 
+# Local tooling / large source archives (kept out of git history)
+/.venv_tools/
+/Assets/External/*.zip
+/Assets/External/*.zip.meta
+/Assets/Screenshots/
+
 # JetBrains Rider
 .idea/
 
