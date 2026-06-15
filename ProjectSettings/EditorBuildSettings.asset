@@ -44,4 +44,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Day2_DietMatch_Lunch.unity
     guid: c89390d634b2c3b41908c55ee06afdbb
+  - enabled: 1
+    path: Assets/Scenes/Day3_DietMatch_Breakfast.unity
+    guid: ddc0c19839fbe5b44b7c7a011a8dbfdd
   m_configObjects: {}

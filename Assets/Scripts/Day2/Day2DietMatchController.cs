@@ -11,9 +11,14 @@ public sealed class Day2DietMatchController : MonoBehaviour
         public string displayName = "食物";
         public float sugarPerPortion = 10f;
         public float basePreference = 1f;
+        public int maxPortions = 3;
         public Sprite sprite;
         [HideInInspector] public int portions;
     }
+
+    [Header("Display")]
+    [SerializeField] private string titleText = "第二天 · 午餐搭配";
+    [SerializeField] private string mealName = "午餐";
 
     [Header("Flow")]
     [SerializeField] private string nextSceneName = "MainMenu";
@@ -52,7 +57,8 @@ public sealed class Day2DietMatchController : MonoBehaviour
     private Text satisfactionText;
     private Text messageText;
     private readonly List<Text> countTexts = new List<Text>();
-    private readonly List<Button> stepButtons = new List<Button>();
+    private readonly List<Button> minusButtons = new List<Button>();
+    private readonly List<Button> plusButtons = new List<Button>();
     private Button confirmButton;
     private Text confirmLabel;
 
@@ -116,11 +122,11 @@ public sealed class Day2DietMatchController : MonoBehaviour
     {
         return new List<DietCard>
         {
-            new DietCard { displayName = "田园沙拉", sugarPerPortion = 9f, basePreference = 2f },
-            new DietCard { displayName = "杂粮饭", sugarPerPortion = 32f, basePreference = 3f },
-            new DietCard { displayName = "香煎鸡胸", sugarPerPortion = 6f, basePreference = 3f },
-            new DietCard { displayName = "鲜榨果汁", sugarPerPortion = 26f, basePreference = 4f },
-            new DietCard { displayName = "草莓奶油蛋糕", sugarPerPortion = 64f, basePreference = 6f }
+            new DietCard { displayName = "田园沙拉", sugarPerPortion = 9f, basePreference = 2f, maxPortions = 2 },
+            new DietCard { displayName = "杂粮饭", sugarPerPortion = 32f, basePreference = 3f, maxPortions = 1 },
+            new DietCard { displayName = "香煎鸡胸", sugarPerPortion = 6f, basePreference = 3f, maxPortions = 2 },
+            new DietCard { displayName = "鲜榨果汁", sugarPerPortion = 26f, basePreference = 4f, maxPortions = 1 },
+            new DietCard { displayName = "草莓奶油蛋糕", sugarPerPortion = 64f, basePreference = 6f, maxPortions = 1 }
         };
     }
 
@@ -181,7 +187,7 @@ public sealed class Day2DietMatchController : MonoBehaviour
         }
 
         DietCard card = cards[index];
-        card.portions = Mathf.Max(0, card.portions + delta);
+        card.portions = Mathf.Clamp(card.portions + delta, 0, Mathf.Max(1, card.maxPortions));
         RefreshUI();
     }
 
@@ -276,9 +282,17 @@ public sealed class Day2DietMatchController : MonoBehaviour
             confirmLabel.text = completed ? "已完成" : "确定这一餐";
         }
 
-        for (int i = 0; i < stepButtons.Count; i++)
+        for (int i = 0; i < cards.Count; i++)
         {
-            stepButtons[i].interactable = !completed;
+            if (i < minusButtons.Count)
+            {
+                minusButtons[i].interactable = !completed && cards[i].portions > 0;
+            }
+
+            if (i < plusButtons.Count)
+            {
+                plusButtons[i].interactable = !completed && cards[i].portions < Mathf.Max(1, cards[i].maxPortions);
+            }
         }
 
         if (messageText != null)
@@ -329,11 +343,11 @@ public sealed class Day2DietMatchController : MonoBehaviour
 
         GameObject title = NewUI("Title", header.transform);
         PlaceTop(title.GetComponent<RectTransform>(), -14f, 40f, 1240f);
-        AddText(title, "第二天 · 午餐搭配", 32, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+        AddText(title, titleText, 32, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
 
         GameObject rule = NewUI("Rule", header.transform);
         PlaceTop(rule.GetComponent<RectTransform>(), -58f, 30f, 1240f);
-        AddText(rule, "搭配午餐，让总含糖量落在 " + sugarMin.ToString("F0") + " ~ " + sugarMax.ToString("F0") + " 克之间；同种吃多了喜好会递减。", 19, new Color(1f, 1f, 1f, 0.82f), TextAnchor.MiddleCenter);
+        AddText(rule, "搭配" + mealName + "，让总含糖量落在 " + sugarMin.ToString("F0") + " ~ " + sugarMax.ToString("F0") + " 克之间；同种吃多了喜好会递减。", 19, new Color(1f, 1f, 1f, 0.82f), TextAnchor.MiddleCenter);
 
         GameObject sugarGo = NewUI("Sugar", header.transform);
         RectTransform sgr = sugarGo.GetComponent<RectTransform>();
@@ -403,13 +417,13 @@ public sealed class Day2DietMatchController : MonoBehaviour
 
         GameObject statGo = NewUI("Stat", cardGo.transform);
         PlaceCenter(statGo.GetComponent<RectTransform>(), -70f, cardW - 20f, 26f);
-        AddText(statGo, "糖 " + card.sugarPerPortion.ToString("F0") + "   喜好 " + card.basePreference.ToString("F0"), 18, ColMuted, TextAnchor.MiddleCenter);
+        AddText(statGo, "糖 " + card.sugarPerPortion.ToString("F0") + "  喜好 " + card.basePreference.ToString("F0") + "  上限 " + Mathf.Max(1, card.maxPortions), 17, ColMuted, TextAnchor.MiddleCenter);
 
         int captured = index;
 
         Button minus = BuildStepButton(cardGo.transform, "−", new Vector2(-72f, -118f));
         minus.onClick.AddListener(() => ChangePortion(captured, -1));
-        stepButtons.Add(minus);
+        minusButtons.Add(minus);
 
         GameObject countGo = NewUI("Count", cardGo.transform);
         PlaceCenter(countGo.GetComponent<RectTransform>(), -118f, 90f, 44f);
@@ -418,7 +432,7 @@ public sealed class Day2DietMatchController : MonoBehaviour
 
         Button plus = BuildStepButton(cardGo.transform, "+", new Vector2(72f, -118f));
         plus.onClick.AddListener(() => ChangePortion(captured, 1));
-        stepButtons.Add(plus);
+        plusButtons.Add(plus);
     }
 
     private Button BuildStepButton(Transform parent, string label, Vector2 anchoredPos)
@@ -530,12 +544,17 @@ public sealed class Day2DietMatchController : MonoBehaviour
 
     private static void EnsureEventSystem()
     {
-        if (Object.FindObjectOfType<EventSystem>() != null)
+        EventSystem[] systems = Object.FindObjectsOfType<EventSystem>();
+        if (systems.Length == 0)
         {
+            new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             return;
         }
 
-        GameObject es = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-        es.hideFlags = HideFlags.DontSave;
+        // Keep exactly one EventSystem; remove any extras to avoid the duplicate warning.
+        for (int i = 1; i < systems.Length; i++)
+        {
+            Object.Destroy(systems[i].gameObject);
+        }
     }
 }

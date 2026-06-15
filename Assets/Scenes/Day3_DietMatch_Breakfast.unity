@@ -122,7 +122,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &266134601
+--- !u!1 &586114055
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,96 +130,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 266134603}
-  - component: {fileID: 266134602}
-  m_Layer: 0
-  m_Name: Day2DietMatch
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &266134602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 266134601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 311b0faeee3a15e41a85db2b9588711e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  titleText: "\u7B2C\u4E8C\u5929 \xB7 \u5348\u9910\u642D\u914D"
-  mealName: "\u5348\u9910"
-  nextSceneName: Day3_DietMatch_Breakfast
-  allowAutoLoadOnWin: 1
-  winAutoLoadDelaySeconds: 1.5
-  satisfactionScoreMultiplier: 10
-  grantHealthBonusOnValidMeal: 1
-  healthBonus: 5
-  sugarMin: 30
-  sugarMax: 50
-  repeatPreferenceFactor: 0.5
-  cards:
-  - displayName: "\u7530\u56ED\u6C99\u62C9"
-    sugarPerPortion: 9
-    basePreference: 2
-    maxPortions: 2
-    sprite: {fileID: 21300000, guid: d20a0fd1fc84a4c45831f8b38a4ba39d, type: 3}
-    portions: 0
-  - displayName: "\u6742\u7CAE\u996D"
-    sugarPerPortion: 32
-    basePreference: 3
-    maxPortions: 1
-    sprite: {fileID: 21300000, guid: c474456831238214e9e752d8872ac65e, type: 3}
-    portions: 0
-  - displayName: "\u9999\u714E\u9E21\u80F8"
-    sugarPerPortion: 6
-    basePreference: 3
-    maxPortions: 2
-    sprite: {fileID: 21300000, guid: 292dd47bd77a37b40ba03fe9d7d71647, type: 3}
-    portions: 0
-  - displayName: "\u9C9C\u69A8\u679C\u6C41"
-    sugarPerPortion: 26
-    basePreference: 4
-    maxPortions: 1
-    sprite: {fileID: 21300000, guid: 476358689212733468c5a386b715754b, type: 3}
-    portions: 0
-  - displayName: "\u8349\u8393\u5976\u6CB9\u86CB\u7CD5"
-    sugarPerPortion: 64
-    basePreference: 6
-    maxPortions: 1
-    sprite: {fileID: 21300000, guid: 9db10270dac2f584eb899fe04f814bc8, type: 3}
-    portions: 0
-  gameManager: {fileID: 0}
---- !u!4 &266134603
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 266134601}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &450925065
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 450925068}
-  - component: {fileID: 450925067}
-  - component: {fileID: 450925066}
+  - component: {fileID: 586114058}
+  - component: {fileID: 586114057}
+  - component: {fileID: 586114056}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -227,21 +140,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &450925066
+--- !u!81 &586114056
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 450925065}
+  m_GameObject: {fileID: 586114055}
   m_Enabled: 1
---- !u!20 &450925067
+--- !u!20 &586114057
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 450925065}
+  m_GameObject: {fileID: 586114055}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -286,13 +199,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &450925068
+--- !u!4 &586114058
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 450925065}
+  m_GameObject: {fileID: 586114055}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: -10}
@@ -301,7 +214,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1450206386
+--- !u!1 &1620105770
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -309,8 +222,95 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1450206388}
-  - component: {fileID: 1450206387}
+  - component: {fileID: 1620105772}
+  - component: {fileID: 1620105771}
+  m_Layer: 0
+  m_Name: Day3DietMatch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1620105771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620105770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 311b0faeee3a15e41a85db2b9588711e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  titleText: "\u7B2C\u4E09\u5929 \xB7 \u65E9\u9910\u642D\u914D"
+  mealName: "\u65E9\u9910"
+  nextSceneName: MainMenu
+  allowAutoLoadOnWin: 1
+  winAutoLoadDelaySeconds: 1.8
+  satisfactionScoreMultiplier: 10
+  grantHealthBonusOnValidMeal: 1
+  healthBonus: 5
+  sugarMin: 15
+  sugarMax: 30
+  repeatPreferenceFactor: 0.5
+  cards:
+  - displayName: "\u6C34\u716E\u86CB"
+    sugarPerPortion: 2
+    basePreference: 2
+    maxPortions: 2
+    sprite: {fileID: 21300000, guid: a3864cf2db82887439928956488d2481, type: 3}
+    portions: 0
+  - displayName: "\u65E0\u7CD6\u8C46\u6D46"
+    sugarPerPortion: 4
+    basePreference: 3
+    maxPortions: 2
+    sprite: {fileID: 21300000, guid: b5be3ba98fc991d4abed53ed8f438aa1, type: 3}
+    portions: 0
+  - displayName: "\u5168\u9EA6\u9762\u5305"
+    sugarPerPortion: 12
+    basePreference: 3
+    maxPortions: 2
+    sprite: {fileID: 21300000, guid: 77ec8f0212245fe458cde146e51b69bd, type: 3}
+    portions: 0
+  - displayName: "\u725B\u5976\u71D5\u9EA6"
+    sugarPerPortion: 16
+    basePreference: 4
+    maxPortions: 1
+    sprite: {fileID: 21300000, guid: dcb0dd312e897644d9fb70543afbbcae, type: 3}
+    portions: 0
+  - displayName: "\u5DE7\u514B\u529B\u751C\u751C\u5708"
+    sugarPerPortion: 32
+    basePreference: 6
+    maxPortions: 1
+    sprite: {fileID: 21300000, guid: 81f50097304ca5244ba6741fd6d744bd, type: 3}
+    portions: 0
+  gameManager: {fileID: 0}
+--- !u!4 &1620105772
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620105770}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1624999747
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1624999749}
+  - component: {fileID: 1624999748}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -318,13 +318,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!108 &1450206387
+--- !u!108 &1624999748
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450206386}
+  m_GameObject: {fileID: 1624999747}
   m_Enabled: 1
   serializedVersion: 10
   m_Type: 1
@@ -380,13 +380,13 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
---- !u!4 &1450206388
+--- !u!4 &1624999749
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450206386}
+  m_GameObject: {fileID: 1624999747}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
   m_LocalPosition: {x: 0, y: 3, z: 0}
@@ -399,6 +399,6 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 450925068}
-  - {fileID: 1450206388}
-  - {fileID: 266134603}
+  - {fileID: 586114058}
+  - {fileID: 1624999749}
+  - {fileID: 1620105772}

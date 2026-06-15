@@ -1683,7 +1683,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4494c92616eb2234f8a1bba3ca11af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nextSceneName: MainMenu
+  nextSceneName: Day2_DietMatch_Lunch
   allowAutoLoadOnWin: 1
   winAutoLoadDelaySeconds: 1.2
   scoreReward: 20
