@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public sealed class Day2LancingController : MonoBehaviour
 {
@@ -37,6 +40,7 @@ public sealed class Day2LancingController : MonoBehaviour
     [SerializeField] private Transform glucoseMeter;
     [SerializeField] private Transform testStrip;
     [SerializeField] private Transform testStripDock;
+    [SerializeField] private Transform testStripFinalPose;
     [SerializeField] private Transform testStripInsertProbe;
     [SerializeField] private Transform cartoonHand;
     [SerializeField] private Transform fingerDisinfectPoint;
@@ -122,10 +126,16 @@ public sealed class Day2LancingController : MonoBehaviour
     private Quaternion penCapAttachedWorldRot = Quaternion.identity;
     private Vector3 penCapAttachedLocalScale = Vector3.one;
     private bool penCapAttachedPoseCaptured;
-    private string statusText = "步骤1：将采血笔帽拖到 TrayA。";
+    private string statusText = string.Empty;
     private bool nextSceneLoadScheduled;
     private float nextSceneLoadTimer;
     private bool nextSceneLoadTriggered;
+    private Texture2D uiSolidTexture;
+    private GUIStyle uiTitleStyle;
+    private GUIStyle uiLineStyle;
+    private GUIStyle uiPrimaryStyle;
+    private GUIStyle uiHintStyle;
+    private GUIStyle uiButtonStyle;
 
     private void OnValidate()
     {
@@ -174,12 +184,6 @@ public sealed class Day2LancingController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            gameManager.ReturnToMainMenu();
-            return;
-        }
-
         if (IsCurrentStageComplete())
         {
             TryAutoLoadNextScene();
@@ -228,25 +232,21 @@ public sealed class Day2LancingController : MonoBehaviour
 
     private void OnGUI()
     {
-        Rect panel = new Rect(12f, 10f, 720f, 124f);
-        GUILayout.BeginArea(panel, GUI.skin.box);
-        GUILayout.Label("Day2 采血流程（四阶段）");
-        GUILayout.Label("阶段划分：1) 血糖笔安装  2) 插入试纸  3) 扎手指测血糖  4) 空格小游戏");
-        GUILayout.Label(GetMajorStageProgressText());
-        GUILayout.Label(statusText);
-        GUILayout.Label(GetOperationText());
-        GUILayout.EndArea();
+        EnsureUiStyles();
+
+        string operation = GetOperationText();
+        if (!string.IsNullOrEmpty(operation))
+        {
+            float width = Mathf.Clamp(Screen.width - 140f, 720f, 980f);
+            Rect panel = new Rect((Screen.width - width) * 0.5f, 32f, width, 64f);
+            DrawUiPanel(panel);
+
+            GUILayout.BeginArea(GetPaddedRect(panel, 24f, 14f));
+            GUILayout.Label(operation, uiPrimaryStyle);
+            GUILayout.EndArea();
+        }
 
         DrawDepthAdjustPanel();
-    }
-
-    private string GetMajorStageProgressText()
-    {
-        bool stage1Done = currentStep >= StepDepthLocked;
-        bool stage2Done = currentStep >= StepStripInserted;
-        string stage1 = stage1Done ? "已完成" : "进行中";
-        string stage2 = stage2Done ? "已完成" : (currentStep >= StepDepthLocked ? "进行中" : "未开始");
-        return "当前开发进度：阶段1[" + stage1 + "] 阶段2[" + stage2 + "] 阶段3[待实现] 阶段4[待实现]";
     }
 
     private bool IsCurrentStageComplete()
@@ -465,33 +465,39 @@ public sealed class Day2LancingController : MonoBehaviour
             return;
         }
 
-        Rect panel = new Rect(12f, 112f, 360f, 132f);
-        GUILayout.BeginArea(panel, GUI.skin.box);
-        GUILayout.Label("挡位调节");
-        GUILayout.Label("当前挡位: " + currentDepthLevel + "    目标挡位: " + targetDepthLevel);
+        EnsureUiStyles();
+
+        float width = Mathf.Clamp(Screen.width - 140f, 520f, 620f);
+        Rect panel = new Rect((Screen.width - width) * 0.5f, 188f, width, 240f);
+        DrawUiPanel(panel);
+
+        GUILayout.BeginArea(GetPaddedRect(panel, 24f, 18f));
+        GUILayout.Label("采血深度调节", uiTitleStyle);
+        GUILayout.Space(6f);
+        GUILayout.Label("当前 " + currentDepthLevel + " 档    目标 " + targetDepthLevel + " 档", uiPrimaryStyle);
+        GUILayout.Space(12f);
 
         GUI.enabled = currentStep == StepPenCapReattached;
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("-"))
+        if (GUILayout.Button("降低", uiButtonStyle, GUILayout.Height(48f)))
         {
             AdjustDepthLevel(-1);
         }
 
-        if (GUILayout.Button("+"))
+        if (GUILayout.Button("提高", uiButtonStyle, GUILayout.Height(48f)))
         {
             AdjustDepthLevel(1);
         }
         GUILayout.EndHorizontal();
 
+        GUILayout.Space(10f);
         GUI.enabled = currentStep == StepPenCapReattached && currentDepthLevel == targetDepthLevel;
-        if (GUILayout.Button("锁定挡位"))
+        if (GUILayout.Button("锁定挡位", uiButtonStyle, GUILayout.Height(48f)))
         {
             TryLockDepthLevel();
         }
 
         GUI.enabled = true;
-        GUILayout.Label("可用键盘：←/- 降挡，→/+ 升挡，Enter 锁定。");
-
         GUILayout.EndArea();
     }
 
@@ -657,7 +663,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         ReturnCapToDock();
-        statusText = "笔帽还没放到 TrayA，请再试一次。";
+        statusText = "笔帽还没有放到左侧托盘，请对准托盘后再松开。";
     }
 
     private void FinishDraggingLancet()
@@ -682,7 +688,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         ReturnLancetToInitialPose();
-        statusText = "位置不合适：请把整个采血针放到采血笔安装位。";
+        statusText = "采血针还没有对准笔身，请拖到采血笔前端的安装位。";
     }
 
     private void FinishDraggingSafetyCap()
@@ -704,7 +710,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         ReturnSafetyCapToAttachedPose();
-        statusText = "保护帽未放到 TrayB，请先拆下并放回 TrayB。";
+        statusText = "保护帽还没有放到右侧托盘，请先取下并放好。";
     }
 
     private void FinishReattachPenCap()
@@ -726,7 +732,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         ReturnCapToTrayA();
-        statusText = "笔帽未对准编辑器预设装配位，请从 TrayA 再拖回安装位。";
+        statusText = "笔帽还没有对准笔身，请从左侧托盘拖回采血笔前端。";
     }
 
     private void FinishDraggingTestStrip()
@@ -748,7 +754,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         ReturnTestStripToInitialPose();
-        statusText = "试纸未对准血糖仪插槽，请拖到插入口后再松开。";
+        statusText = "试纸还没有插准，请把试纸前端对准血糖仪插入口。";
     }
 
     private void FinishDraggingSwab()
@@ -769,7 +775,7 @@ public sealed class Day2LancingController : MonoBehaviour
             }
 
             ReturnSwabToInitialPose();
-            statusText = "请先将棉签蘸取酒精。";
+            statusText = "先让棉签蘸取酒精，再擦拭手指。";
             return;
         }
 
@@ -779,7 +785,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         ReturnSwabToInitialPose();
-        statusText = "请用蘸酒精的棉签擦拭手指触点。";
+        statusText = "请用蘸过酒精的棉签擦拭指尖采血位置。";
     }
 
     private void AdjustDepthLevel(int delta)
@@ -797,7 +803,7 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         currentDepthLevel = nextLevel;
-        statusText = "步骤5：调节挡位到 " + clampedTarget + "，然后锁定。当前: " + currentDepthLevel;
+        statusText = string.Empty;
     }
 
     private void TryLockDepthLevel()
@@ -810,7 +816,7 @@ public sealed class Day2LancingController : MonoBehaviour
         int clampedTarget = Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel);
         if (currentDepthLevel != clampedTarget)
         {
-            statusText = "挡位未到目标值，请先调到 " + clampedTarget + "。";
+            statusText = "还没有调到目标挡位，请先调到 " + clampedTarget + " 档。";
             return;
         }
 
@@ -959,7 +965,7 @@ public sealed class Day2LancingController : MonoBehaviour
 
         swabDipped = true;
         ApplySwabTipColor(swabWetColor);
-        statusText = "已蘸取酒精：请用棉签擦拭手指触点。";
+        statusText = "棉签已蘸取酒精，请擦拭指尖采血位置。";
         return true;
     }
 
@@ -1009,16 +1015,6 @@ public sealed class Day2LancingController : MonoBehaviour
             if (Vector3.Distance(probe.position, testStripDock.position) > threshold)
             {
                 return false;
-            }
-
-            if (probe == testStrip)
-            {
-                SnapTransform(testStrip, testStripDock);
-            }
-            else
-            {
-                testStrip.rotation = testStripDock.rotation * Quaternion.Inverse(probe.localRotation);
-                testStrip.position += testStripDock.position - probe.position;
             }
 
             if (TryApplyRecordedStripSnapPose())
@@ -1213,9 +1209,29 @@ public sealed class Day2LancingController : MonoBehaviour
             return false;
         }
 
+        if (testStripFinalPose != null)
+        {
+            CopyTransformPose(testStrip, testStripFinalPose);
+            return true;
+        }
+
         testStrip.SetPositionAndRotation(recordedStripSnapWorldPos, Quaternion.Euler(recordedStripSnapWorldEuler));
         testStrip.localScale = recordedStripSnapLocalScale;
         return true;
+    }
+
+    private static void CopyTransformPose(Transform target, Transform source)
+    {
+        if (target.parent == source.parent && target.parent != null)
+        {
+            target.localPosition = source.localPosition;
+            target.localRotation = source.localRotation;
+            target.localScale = source.localScale;
+            return;
+        }
+
+        target.SetPositionAndRotation(source.position, source.rotation);
+        target.localScale = source.localScale;
     }
 
     private void ApplyTestStripExposeOffset()
@@ -1475,6 +1491,15 @@ public sealed class Day2LancingController : MonoBehaviour
                 if (dockGo != null)
                 {
                     testStripDock = dockGo.transform;
+                }
+            }
+
+            if (testStripFinalPose == null)
+            {
+                GameObject finalPoseGo = GameObject.Find("TestStripFinalPose");
+                if (finalPoseGo != null)
+                {
+                    testStripFinalPose = finalPoseGo.transform;
                 }
             }
         }
@@ -1832,30 +1857,22 @@ public sealed class Day2LancingController : MonoBehaviour
         switch (currentStep)
         {
             case StepMoveCapToTrayA:
-                statusText = "步骤1：将采血笔帽拖到 TrayA。";
-                break;
             case StepInstallLancet:
-                statusText = "步骤2：将 Process（整根采血针）拖到采血笔安装位。";
-                break;
             case StepLancetInstalled:
-                statusText = "步骤3：将 ProcessSafetyCap 拆下并放回 TrayB。";
-                break;
             case StepSafetyCapOnTrayB:
-                statusText = "步骤4：将笔帽从 TrayA 装回采血笔。";
-                break;
             case StepPenCapReattached:
-                statusText = "步骤5：调节挡位到 " + Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel) + "，然后锁定。";
+                statusText = string.Empty;
                 break;
             case StepDepthLocked:
                 statusText = stageCompleteStep <= StepDepthLocked
-                    ? "阶段1完成：血糖笔安装已完成，正在进入下一场景。"
-                    : "步骤6：将试纸拖到血糖仪插槽。";
+                    ? "采血笔已准备好，正在进入下一阶段。"
+                    : string.Empty;
                 break;
             case StepStripInserted:
-                statusText = "阶段2完成：试纸已插入，正在进入下一场景（阶段3）。";
+                statusText = "试纸已插入，正在进入下一阶段。";
                 break;
             default:
-                statusText = "流程状态异常，请重新进入场景。";
+                statusText = "当前流程状态异常，请重新进入场景。";
                 break;
         }
     }
@@ -1865,24 +1882,82 @@ public sealed class Day2LancingController : MonoBehaviour
         switch (currentStep)
         {
             case StepMoveCapToTrayA:
-                return "操作：左键拖动 OriginalLancingDevice_Cap 到 TrayA。";
+                return "拖动笔帽到左侧托盘";
             case StepInstallLancet:
-                return "操作：左键拖动 Process 到采血笔安装位（LancetDock）。";
+                return "拖动采血针装入采血笔";
             case StepLancetInstalled:
-                return "操作：左键拖动 ProcessSafetyCap 到 TrayB。";
+                return "拖动保护帽到右侧托盘";
             case StepSafetyCapOnTrayB:
-                return "操作：左键拖动 OriginalLancingDevice_Cap 到采血笔安装位。";
+                return "拖动笔帽装回采血笔";
             case StepPenCapReattached:
-                return "操作：使用 +/- 或左右键调节挡位，按 Enter 或按钮锁定。";
+                return string.Empty;
             case StepDepthLocked:
                 return stageCompleteStep <= StepDepthLocked
-                    ? "操作：等待自动进入阶段2（插入试纸）。"
-                    : "操作：左键拖动 NiproTestStripProp 到血糖仪插入口。";
+                    ? string.Empty
+                    : "拖动试纸插入血糖仪";
             case StepStripInserted:
-                return "操作：等待自动进入阶段3（扎手指测血糖）。";
+                return string.Empty;
             default:
-                return "Esc 返回主菜单。";
+                return string.Empty;
         }
+    }
+
+    private void EnsureUiStyles()
+    {
+        if (uiSolidTexture == null)
+        {
+            uiSolidTexture = new Texture2D(1, 1);
+            uiSolidTexture.SetPixel(0, 0, Color.white);
+            uiSolidTexture.Apply();
+            uiSolidTexture.hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        if (uiTitleStyle != null)
+        {
+            return;
+        }
+
+        uiTitleStyle = CreateLabelStyle(28, FontStyle.Bold, Color.white);
+        uiLineStyle = CreateLabelStyle(18, FontStyle.Normal, new Color(0.84f, 0.91f, 0.96f));
+        uiPrimaryStyle = CreateLabelStyle(21, FontStyle.Bold, Color.white);
+        uiHintStyle = CreateLabelStyle(18, FontStyle.Normal, new Color(0.73f, 0.84f, 0.92f));
+        uiButtonStyle = new GUIStyle(GUI.skin.button)
+        {
+            fontSize = 18,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = Color.white },
+            hover = { textColor = Color.white },
+            active = { textColor = Color.white },
+            alignment = TextAnchor.MiddleCenter
+        };
+    }
+
+    private static GUIStyle CreateLabelStyle(int fontSize, FontStyle fontStyle, Color color)
+    {
+        return new GUIStyle(GUI.skin.label)
+        {
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            normal = { textColor = color },
+            wordWrap = true
+        };
+    }
+
+    private void DrawUiPanel(Rect rect)
+    {
+        EnsureUiStyles();
+
+        Color oldColor = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.22f);
+        GUI.DrawTexture(new Rect(rect.x + 5f, rect.y + 5f, rect.width, rect.height), uiSolidTexture);
+        GUI.color = new Color(0.04f, 0.08f, 0.12f, 0.88f);
+        GUI.DrawTexture(rect, uiSolidTexture);
+        GUI.color = oldColor;
+    }
+
+    private static Rect GetPaddedRect(Rect rect, float horizontal, float vertical)
+    {
+        return new Rect(rect.x + horizontal, rect.y + vertical, rect.width - (horizontal * 2f), rect.height - (vertical * 2f));
     }
 
     private void UpdateHintVisibility()
@@ -1966,4 +2041,32 @@ public sealed class Day2LancingController : MonoBehaviour
         _ = recordedStripSnapWorldEuler;
         _ = recordedStripSnapLocalScale;
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("Sync Test Strip Final Pose From Prop")]
+    private void SyncTestStripFinalPoseFromProp()
+    {
+        if (testStrip == null)
+        {
+            GameObject stripGo = GameObject.Find("NiproTestStripProp");
+            if (stripGo != null)
+            {
+                testStrip = stripGo.transform;
+            }
+        }
+
+        if (testStrip == null || testStripFinalPose == null)
+        {
+            Debug.LogWarning("[Day2LancingController] Need NiproTestStripProp and TestStripFinalPose.");
+            return;
+        }
+
+        testStripFinalPose.localPosition = testStrip.localPosition;
+        testStripFinalPose.localRotation = testStrip.localRotation;
+        testStripFinalPose.localScale = testStrip.localScale;
+        EditorUtility.SetDirty(testStripFinalPose);
+        Debug.Log("[Day2LancingController] Copied strip pose to TestStripFinalPose: "
+            + testStripFinalPose.localPosition + " / " + testStripFinalPose.localEulerAngles);
+    }
+#endif
 }

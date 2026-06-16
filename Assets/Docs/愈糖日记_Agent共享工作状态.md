@@ -53,10 +53,15 @@ MCP session ID 会随重连变化，不要写死 session ID。每次新会话应
   - `Day2_DietMatch_Lunch`（午餐）：区间 `[30,50]`，卡 = 田园沙拉 / 杂粮饭 / 香煎鸡胸 / 鲜榨果汁 / 草莓奶油蛋糕。
   - `Day3_DietMatch_Breakfast`（早餐）：区间 `[15,30]`，卡 = 水煮蛋 / 无糖豆浆 / 全麦面包 / 牛奶燕麦 / 巧克力甜甜圈。
 - 卡面插画：`Assets/External/DietCards/*.png`（午餐 `card_*`，早餐 `bcard_*`）。
+- Day 3 运动已重做为独立三轨跑酷：
+  - 场景：`Assets/Scenes/Day3_Home.unity`。
+  - 操作：`A/D` 或左右方向键换道，`Space/W/上方向键`跳跃。
+  - 约 260 米固定路线，包含高糖食物障碍、爱心奖励、健康值、积分、进度、失败重试与完成结算。
+  - 早餐完成后直接进入 `Day3_Home`。
+  - 模型来自 Kenney Food Kit / Platformer Kit，CC0；筛选资产及许可位于 `Assets/External/Day3Runner/`。
 
 待做：
 
-- Day 3 运动（血糖平衡跑酷）。
 - Day 4 晚餐饮食搭配（复用 `Day2DietMatchController`，配晚餐卡与区间）。
 - Day 5 四轨音游、Result 结算、全局本局状态/积分系统完善。
 

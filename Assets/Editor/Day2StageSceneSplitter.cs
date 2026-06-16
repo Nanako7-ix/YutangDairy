@@ -26,10 +26,14 @@ public static class Day2StageSceneSplitter
     private const string DisinfectionTrayMaterialPath = NiproMaterialFolder + "/DisinfectionTray.mat";
     private const string DisinfectionSwabMaterialPath = NiproMaterialFolder + "/DisinfectionSwab.mat";
     private const string CartoonHandMaterialPath = NiproMaterialFolder + "/CartoonHandSkin.mat";
+    private static readonly Vector3 Stage2MeterLocalPosition = new Vector3(0.149f, 0.906f, -0.266f);
+    private static readonly Quaternion Stage2MeterLocalRotation = new Quaternion(-0.07318235f, -0.7033096f, -0.7033096f, -0.07318235f);
+    private static readonly Vector3 Stage2MeterLocalScale = new Vector3(3.567051f, 3.567051f, 3.567051f);
+    private static readonly Vector3 Stage2StripLocalPosition = new Vector3(-0.65500003f, 0.844f, -0.181f);
+    private static readonly Quaternion Stage2StripLocalRotation = new Quaternion(0f, 0.7071068f, 0f, -0.7071068f);
+    private static readonly Vector3 Stage2StripLocalScale = Vector3.one;
     private static readonly Vector3 Stage3TrayOffsetFromHand = new Vector3(0.7f, -0.55f, 0.25f);
-    private static readonly Vector3 Stage3PenBodyOffsetFromTray = new Vector3(0.6f, 0.16f, 0.1f);
-    private static readonly Vector3 Stage3PenCapOffsetFromBody = new Vector3(-3.669f, -0.2819f, -0.0007f);
-    private static readonly Vector3 Stage3PenScale = new Vector3(11f, 11f, 11f);
+    private static readonly Vector3 Stage3PenCapLocalPosition = new Vector3(-0.00006363f, -0.025627272f, 0.33354545f);
 
     [MenuItem("Tools/Yutang Diary/Rebuild Day2 Split Stage Scenes")]
     public static void RebuildFromMenu()
@@ -161,6 +165,7 @@ public static class Day2StageSceneSplitter
         RemovePlaceholderControllers();
         Vector3 stageScalePivot = ScaleSceneLayout(scene, Day2SceneScaleFactor);
         ScaleControllerTuning(controller, Day2SceneScaleFactor, stageScalePivot);
+        ArrangeStage2Props(scene);
         SaveScene(scene);
     }
 
@@ -244,7 +249,7 @@ public static class Day2StageSceneSplitter
         ConfigurePlaceholder(
             stageIndex: 3,
             title: "阶段3：扎手指测血糖",
-            description: "该阶段将实现扎手指、出血与测血糖读数。当前版本先完成了前两个阶段。",
+            description: "完成指尖消毒，将采血笔对准中指指尖并按压采血。",
             nextScene: "Day2_Stage4_SpaceMiniGame");
 
         ScaleSceneLayout(scene, Day2SceneScaleFactor);
@@ -282,8 +287,8 @@ public static class Day2StageSceneSplitter
         RemovePlaceholderControllers();
         ConfigurePlaceholder(
             stageIndex: 4,
-            title: "阶段4：空格小游戏",
-            description: "该阶段将接入按空格的节奏/稳定控制小游戏，用于完成最终采血读数确认。",
+            title: "阶段4：稳定血糖读数",
+            description: "按住 Space 控制读数指针，保持在绿色稳定区直到测量完成。",
             nextScene: "MainMenu");
 
         ScaleSceneLayout(scene, Day2SceneScaleFactor);
@@ -449,6 +454,37 @@ public static class Day2StageSceneSplitter
         }
 
         go.transform.SetParent(null, true);
+        EditorUtility.SetDirty(go);
+    }
+
+    private static void ArrangeStage2Props(Scene scene)
+    {
+        SetLocalTransform(
+            scene,
+            "NiproMeterProp",
+            Stage2MeterLocalPosition,
+            Stage2MeterLocalRotation,
+            Stage2MeterLocalScale);
+
+        SetLocalTransform(
+            scene,
+            "NiproTestStripProp",
+            Stage2StripLocalPosition,
+            Stage2StripLocalRotation,
+            Stage2StripLocalScale);
+    }
+
+    private static void SetLocalTransform(Scene scene, string objectName, Vector3 localPosition, Quaternion localRotation, Vector3 localScale)
+    {
+        GameObject go = FindByName(scene, objectName);
+        if (go == null)
+        {
+            return;
+        }
+
+        go.transform.localPosition = localPosition;
+        go.transform.localRotation = localRotation;
+        go.transform.localScale = localScale;
         EditorUtility.SetDirty(go);
     }
 
@@ -825,22 +861,11 @@ public static class Day2StageSceneSplitter
             return;
         }
 
-        Vector3 bodyTarget = tray != null
-            ? tray.transform.position + Stage3PenBodyOffsetFromTray
-            : (hand != null ? hand.transform.position + new Vector3(1.1f, -0.25f, 0.35f) : penBody.transform.position);
-
-        penBody.SetActive(true);
-        penBody.transform.SetParent(null, true);
-        penBody.transform.position = bodyTarget;
-        penBody.transform.rotation = Quaternion.Euler(0f, 270f, 0f);
-        penBody.transform.localScale = Stage3PenScale;
-        EditorUtility.SetDirty(penBody);
-
         penCap.SetActive(true);
-        penCap.transform.SetParent(null, true);
-        penCap.transform.position = bodyTarget + Stage3PenCapOffsetFromBody;
-        penCap.transform.rotation = penBody.transform.rotation;
-        penCap.transform.localScale = Stage3PenScale;
+        penCap.transform.SetParent(penBody.transform, false);
+        penCap.transform.localPosition = Stage3PenCapLocalPosition;
+        penCap.transform.localRotation = Quaternion.identity;
+        penCap.transform.localScale = Vector3.one;
         EditorUtility.SetDirty(penCap);
     }
 

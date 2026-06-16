@@ -245,7 +245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   titleText: "\u7B2C\u4E09\u5929 \xB7 \u65E9\u9910\u642D\u914D"
   mealName: "\u65E9\u9910"
-  nextSceneName: MainMenu
+  nextSceneName: Day3_Home
   allowAutoLoadOnWin: 1
   winAutoLoadDelaySeconds: 1.8
   satisfactionScoreMultiplier: 10

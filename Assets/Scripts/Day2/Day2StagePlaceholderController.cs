@@ -49,6 +49,11 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
     private bool penInitialPoseCaptured;
     private Coroutine swabRoutine;
     private Coroutine penRoutine;
+    private Texture2D uiSolidTexture;
+    private GUIStyle uiTitleStyle;
+    private GUIStyle uiLineStyle;
+    private GUIStyle uiPrimaryStyle;
+    private GUIStyle uiHintStyle;
 
     private void Awake()
     {
@@ -78,12 +83,6 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            gameManager.ReturnToMainMenu();
-            return;
-        }
-
         if (IsStage3())
         {
             if (!swabStepCompleted)
@@ -650,54 +649,96 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
 
     private void OnGUI()
     {
-        Rect panel = new Rect(12f, 10f, 760f, 156f);
-        GUILayout.BeginArea(panel, GUI.skin.box);
-        GUILayout.Label("Day2 采血流程（四阶段场景拆分）");
-        GUILayout.Label("当前场景：第 " + stageIndex + " 阶段");
-        GUILayout.Label(stageTitle);
-        GUILayout.Label(stageDescription);
-
-        if (IsStage3())
+        if (!IsStage3())
         {
-            if (swabAnimating)
-            {
-                GUILayout.Label("棉签消毒中：正在自动上下擦拭...");
-            }
-            else if (!swabStepCompleted)
-            {
-                GUILayout.Label("操作：左键拖动棉签到中指附近，触发自动上下擦拭 2~3 次。");
-            }
-            else if (penAnimating)
-            {
-                GUILayout.Label("血糖笔归位中...");
-            }
-            else if (!stage3InteractionCompleted)
-            {
-                if (penPlacedAtTarget)
-                {
-                    GUILayout.Label("血糖笔已到位，按 Space 让血糖笔回到原处。");
-                }
-                else
-                {
-                    GUILayout.Label("操作：拖动血糖笔到目标位置（中指），按 Space 让血糖笔回到原处。");
-                }
-            }
-            else
-            {
-                GUILayout.Label("本阶段操作已完成。");
-            }
+            return;
         }
 
-        if (allowEnterToNextScene && !string.IsNullOrWhiteSpace(nextSceneName))
+        string operation = GetStageOperationText();
+        if (string.IsNullOrEmpty(operation))
         {
-            float remain = autoLoadQueued ? Mathf.Max(0f, autoLoadTimer) : Mathf.Max(0f, autoLoadDelaySeconds);
-            GUILayout.Label("即将自动进入下一阶段（" + remain.ToString("F1") + "s），按 Esc 返回主菜单。");
-        }
-        else
-        {
-            GUILayout.Label("按 Esc 返回主菜单。");
+            return;
         }
 
+        EnsureUiStyles();
+
+        float width = Mathf.Clamp(Screen.width - 140f, 720f, 980f);
+        Rect panel = new Rect((Screen.width - width) * 0.5f, 32f, width, 64f);
+        DrawUiPanel(panel);
+
+        GUILayout.BeginArea(GetPaddedRect(panel, 24f, 14f));
+        GUILayout.Label(operation, uiPrimaryStyle);
         GUILayout.EndArea();
+    }
+
+    private string GetStageOperationText()
+    {
+        if (swabAnimating || penAnimating)
+        {
+            return string.Empty;
+        }
+
+        if (!swabStepCompleted)
+        {
+            return "拖动酒精棉到中指指尖";
+        }
+
+        if (!stage3InteractionCompleted)
+        {
+            return penPlacedAtTarget
+                ? "按 Space 按压采血笔"
+                : "拖动采血笔到中指指尖";
+        }
+
+        return string.Empty;
+    }
+
+    private void EnsureUiStyles()
+    {
+        if (uiSolidTexture == null)
+        {
+            uiSolidTexture = new Texture2D(1, 1);
+            uiSolidTexture.SetPixel(0, 0, Color.white);
+            uiSolidTexture.Apply();
+            uiSolidTexture.hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        if (uiTitleStyle != null)
+        {
+            return;
+        }
+
+        uiTitleStyle = CreateLabelStyle(28, FontStyle.Bold, Color.white);
+        uiLineStyle = CreateLabelStyle(18, FontStyle.Normal, new Color(0.84f, 0.91f, 0.96f));
+        uiPrimaryStyle = CreateLabelStyle(21, FontStyle.Bold, Color.white);
+        uiHintStyle = CreateLabelStyle(18, FontStyle.Normal, new Color(0.73f, 0.84f, 0.92f));
+    }
+
+    private static GUIStyle CreateLabelStyle(int fontSize, FontStyle fontStyle, Color color)
+    {
+        return new GUIStyle(GUI.skin.label)
+        {
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            normal = { textColor = color },
+            wordWrap = true
+        };
+    }
+
+    private void DrawUiPanel(Rect rect)
+    {
+        EnsureUiStyles();
+
+        Color oldColor = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.22f);
+        GUI.DrawTexture(new Rect(rect.x + 5f, rect.y + 5f, rect.width, rect.height), uiSolidTexture);
+        GUI.color = new Color(0.04f, 0.08f, 0.12f, 0.88f);
+        GUI.DrawTexture(rect, uiSolidTexture);
+        GUI.color = oldColor;
+    }
+
+    private static Rect GetPaddedRect(Rect rect, float horizontal, float vertical)
+    {
+        return new Rect(rect.x + horizontal, rect.y + vertical, rect.width - (horizontal * 2f), rect.height - (vertical * 2f));
     }
 }

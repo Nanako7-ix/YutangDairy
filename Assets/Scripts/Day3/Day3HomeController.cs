@@ -1,408 +1,393 @@
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public sealed class Day3HomeController : MonoBehaviour
 {
-    private enum Phase
+    private const int MaxObstacleHits = 3;
+
+    private enum RunState
     {
-        MealCards,
-        Runner,
-        RunnerFailed,
+        Running,
+        Failed,
         Completed
     }
 
-    private sealed class FoodCard
-    {
-        public FoodCard(string name, string category, int healthDelta, int scoreDelta)
-        {
-            Name = name;
-            Category = category;
-            HealthDelta = healthDelta;
-            ScoreDelta = scoreDelta;
-        }
-
-        public string Name;
-        public string Category;
-        public int HealthDelta;
-        public int ScoreDelta;
-    }
-
-    private sealed class LaneEvent
-    {
-        public int Lane;
-        public float TimeToImpact;
-        public bool IsPickup;
-    }
-
-    private const float RunnerEventTravelSeconds = 2.2f;
+    [Header("Runner")]
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private Transform playerVisual;
+    [SerializeField] private Transform followCamera;
+    [SerializeField] private float forwardSpeed = 8.5f;
+    [SerializeField] private float laneWidth = 3f;
+    [SerializeField] private float laneChangeSpeed = 12f;
+    [SerializeField] private float jumpHeight = 2.4f;
+    [SerializeField] private float gravity = -24f;
+    [SerializeField] private float finishZ = 260f;
 
     [Header("Flow")]
-    [SerializeField] private string nextSceneName = "Day4_Home";
-    [SerializeField] private float runnerDuration = 28f;
+    [SerializeField] private string replaySceneName = "Day3_Home";
+    [SerializeField] private string menuSceneName = "MainMenu";
 
-    private readonly List<FoodCard> mealCards = new List<FoodCard>
-    {
-        new FoodCard("糙米饭", "主食", 4, 8),
-        new FoodCard("鸡胸肉", "蛋白", 6, 10),
-        new FoodCard("西兰花", "蔬菜", 5, 9),
-        new FoodCard("番茄蛋汤", "蔬菜", 4, 7),
-        new FoodCard("三文鱼", "蛋白", 6, 11),
-        new FoodCard("全麦面", "主食", 4, 8),
-        new FoodCard("奶茶", "高糖", -8, -6),
-        new FoodCard("炸鸡", "高油", -10, -8)
-    };
-
-    private readonly HashSet<int> selectedCards = new HashSet<int>();
-    private readonly List<LaneEvent> laneEvents = new List<LaneEvent>();
+    [Header("HUD")]
+    [SerializeField] private Text healthText;
+    [SerializeField] private Text scoreText;
+    [SerializeField] private Text progressText;
+    [SerializeField] private Text feedbackText;
+    [SerializeField] private Image healthFill;
+    [SerializeField] private Image progressFill;
+    [SerializeField] private GameObject resultPanel;
+    [SerializeField] private Text resultTitle;
+    [SerializeField] private Text resultBody;
+    [SerializeField] private Button retryButton;
+    [SerializeField] private Button menuButton;
 
     private GameManager gameManager;
-    private Phase phase = Phase.MealCards;
-    private string cardHint = "选择 4 张午/晚餐卡牌（数字键1~8，Enter确认）。";
-    private string runnerHint = "跑酷：A/D 或 ←/→ 切换赛道，躲避红块，吃绿块。";
-    private float runnerTimeLeft;
-    private float spawnTimer;
-    private int playerLane = 1;
+    private RunState state = RunState.Running;
+    private int targetLane = 1;
+    private float verticalVelocity;
+    private float invulnerabilityTimer;
+    private float feedbackTimer;
+    private int heartsCollected;
+    private int obstacleHits;
+    private Vector3 visualStartLocalPosition;
+    private Quaternion visualStartLocalRotation;
+    private Vector3 cameraVelocity;
 
     private void Awake()
     {
         gameManager = GameManager.EnsureInstanceForDemo();
         gameManager.MarkCurrentDay(3);
-        ResetRunnerState();
+
+        if (characterController == null)
+        {
+            characterController = GetComponent<CharacterController>();
+        }
+
+        if (playerVisual != null)
+        {
+            visualStartLocalPosition = playerVisual.localPosition;
+            visualStartLocalRotation = playerVisual.localRotation;
+        }
+
+        ApplyChineseFont();
+    }
+
+    private void Start()
+    {
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
+
+        if (retryButton != null)
+        {
+            retryButton.onClick.AddListener(RetryRun);
+        }
+
+        if (menuButton != null)
+        {
+            menuButton.onClick.AddListener(ReturnToMenu);
+        }
+
+        if (healthFill != null)
+        {
+            healthFill.transform.parent.gameObject.SetActive(false);
+        }
+
+        ShowFeedback("A / D 或方向键换道，Space 跳跃", 4f);
+        RefreshHud();
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            gameManager.ReturnToMainMenu();
+            ReturnToMenu();
             return;
         }
 
-        switch (phase)
+        if (state == RunState.Failed)
         {
-            case Phase.MealCards:
-                UpdateMealCards();
-                break;
-            case Phase.Runner:
-                UpdateRunner();
-                break;
-            case Phase.RunnerFailed:
-                if (Input.GetKeyDown(KeyCode.R))
-                {
-                    gameManager.RegisterRetry();
-                    gameManager.AddHealth(20);
-                    ResetRunnerState();
-                    phase = Phase.Runner;
-                }
-                break;
-            case Phase.Completed:
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-                {
-                    gameManager.LoadScene(nextSceneName);
-                }
-                break;
-        }
-    }
-
-    private void UpdateMealCards()
-    {
-        for (int i = 0; i < mealCards.Count && i < 9; i++)
-        {
-            KeyCode alpha = (KeyCode)((int)KeyCode.Alpha1 + i);
-            KeyCode keypad = (KeyCode)((int)KeyCode.Keypad1 + i);
-            if (Input.GetKeyDown(alpha) || Input.GetKeyDown(keypad))
+            if (Input.GetKeyDown(KeyCode.R))
             {
-                ToggleCard(i);
+                RetryRun();
             }
-        }
-
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-            TryConfirmCards();
-        }
-    }
-
-    private void ToggleCard(int index)
-    {
-        if (selectedCards.Contains(index))
-        {
-            selectedCards.Remove(index);
             return;
         }
 
-        if (selectedCards.Count >= 4)
+        if (state == RunState.Completed)
         {
-            cardHint = "已选满 4 张，先取消一张。";
-            return;
-        }
-
-        selectedCards.Add(index);
-        cardHint = "已选择 " + selectedCards.Count + "/4。";
-    }
-
-    private void TryConfirmCards()
-    {
-        if (selectedCards.Count != 4)
-        {
-            cardHint = "请先选满 4 张卡牌。";
-            return;
-        }
-
-        int main = 0;
-        int protein = 0;
-        int veggie = 0;
-        int unhealthy = 0;
-        int healthDelta = 0;
-        int scoreDelta = 0;
-
-        foreach (int cardIndex in selectedCards)
-        {
-            FoodCard card = mealCards[cardIndex];
-            healthDelta += card.HealthDelta;
-            scoreDelta += card.ScoreDelta;
-
-            switch (card.Category)
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
             {
-                case "主食":
-                    main++;
-                    break;
-                case "蛋白":
-                    protein++;
-                    break;
-                case "蔬菜":
-                    veggie++;
-                    break;
-                default:
-                    unhealthy++;
-                    break;
+                RetryRun();
             }
-        }
-
-        if (main == 0 || protein == 0 || veggie == 0)
-        {
-            cardHint = "类型不平衡：主食/蛋白/蔬菜至少各 1 张。";
             return;
         }
 
-        if (unhealthy > 1)
+        HandleLaneInput();
+        MoveRunner();
+        AnimateVisual();
+
+        invulnerabilityTimer = Mathf.Max(0f, invulnerabilityTimer - Time.deltaTime);
+        feedbackTimer = Mathf.Max(0f, feedbackTimer - Time.deltaTime);
+        if (feedbackTimer <= 0f && feedbackText != null)
         {
-            cardHint = "高糖/高油卡牌最多 1 张。";
-            return;
+            feedbackText.text = string.Empty;
         }
 
-        gameManager.AddHealth(healthDelta);
-        gameManager.AddScore(scoreDelta);
-        phase = Phase.Runner;
-        cardHint = string.Format("饮食结算：健康{0:+#;-#;0}，积分{1:+#;-#;0}。进入跑酷！", healthDelta, scoreDelta);
+        if (transform.position.z >= finishZ)
+        {
+            CompleteRun();
+        }
+
+        RefreshHud();
     }
 
-    private void UpdateRunner()
+    private void LateUpdate()
+    {
+        if (followCamera == null)
+        {
+            return;
+        }
+
+        Vector3 targetPosition = transform.position + new Vector3(0f, 6.2f, -12.5f);
+        followCamera.position = Vector3.SmoothDamp(
+            followCamera.position,
+            targetPosition,
+            ref cameraVelocity,
+            0.12f);
+
+        Vector3 lookTarget = transform.position + new Vector3(0f, 1.1f, 8f);
+        followCamera.rotation = Quaternion.Slerp(
+            followCamera.rotation,
+            Quaternion.LookRotation(lookTarget - followCamera.position, Vector3.up),
+            8f * Time.deltaTime);
+    }
+
+    private void HandleLaneInput()
     {
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            playerLane = Mathf.Max(0, playerLane - 1);
-        }
-        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            playerLane = Mathf.Min(2, playerLane + 1);
+            targetLane = Mathf.Max(0, targetLane - 1);
         }
 
-        runnerTimeLeft -= Time.deltaTime;
-        spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0f)
+        if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
         {
-            SpawnLaneEvent();
-            spawnTimer = Random.Range(0.55f, 1.0f);
+            targetLane = Mathf.Min(2, targetLane + 1);
         }
 
-        for (int i = laneEvents.Count - 1; i >= 0; i--)
+        if (characterController != null
+            && characterController.isGrounded
+            && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)))
         {
-            LaneEvent laneEvent = laneEvents[i];
-            laneEvent.TimeToImpact -= Time.deltaTime;
-            if (laneEvent.TimeToImpact > 0f)
-            {
-                continue;
-            }
-
-            if (laneEvent.Lane == playerLane)
-            {
-                if (laneEvent.IsPickup)
-                {
-                    gameManager.AddHealth(8);
-                    gameManager.AddScore(16);
-                    runnerHint = "拾取到健康道具 +8 健康 +16 积分";
-                }
-                else
-                {
-                    gameManager.AddHealth(-18);
-                    gameManager.AddScore(-6);
-                    runnerHint = "撞到障碍 -18 健康 -6 积分";
-                }
-            }
-
-            laneEvents.RemoveAt(i);
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+    }
 
-        if (gameManager.CurrentHealth <= 0)
+    private void MoveRunner()
+    {
+        if (characterController == null)
         {
-            phase = Phase.RunnerFailed;
-            laneEvents.Clear();
-            runnerHint = "跑酷失败：健康值归零。按 R 重试该阶段。";
             return;
         }
 
-        if (runnerTimeLeft <= 0f)
+        if (characterController.isGrounded && verticalVelocity < 0f)
         {
-            phase = Phase.Completed;
-            laneEvents.Clear();
-            gameManager.AddScore(40);
-            runnerHint = "Day3 完成！按 Enter 进入 Day4。";
+            verticalVelocity = -2f;
+        }
+
+        verticalVelocity += gravity * Time.deltaTime;
+
+        float targetX = (targetLane - 1) * laneWidth;
+        float nextX = Mathf.MoveTowards(transform.position.x, targetX, laneChangeSpeed * Time.deltaTime);
+        float horizontalSpeed = (nextX - transform.position.x) / Mathf.Max(Time.deltaTime, 0.0001f);
+
+        Vector3 velocity = new Vector3(horizontalSpeed, verticalVelocity, forwardSpeed);
+        characterController.Move(velocity * Time.deltaTime);
+    }
+
+    private void AnimateVisual()
+    {
+        if (playerVisual == null)
+        {
+            return;
+        }
+
+        float bob = characterController != null && characterController.isGrounded
+            ? Mathf.Abs(Mathf.Sin(Time.time * 10f)) * 0.08f
+            : 0f;
+        playerVisual.localPosition = visualStartLocalPosition + Vector3.up * bob;
+
+        float targetX = (targetLane - 1) * laneWidth;
+        float lean = Mathf.Clamp((targetX - transform.position.x) * -7f, -14f, 14f);
+        playerVisual.localRotation = visualStartLocalRotation * Quaternion.Euler(0f, 0f, lean);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (state != RunState.Running || other == null)
+        {
+            return;
+        }
+
+        if (other.name.StartsWith("Heart_"))
+        {
+            heartsCollected++;
+            gameManager.AddScore(20);
+            ShowFeedback("收集爱心  积分 +20", 1.6f);
+            Destroy(other.gameObject);
+            return;
+        }
+
+        if (other.name.StartsWith("Obstacle_") && invulnerabilityTimer <= 0f)
+        {
+            invulnerabilityTimer = 1.1f;
+            obstacleHits++;
+            gameManager.AddScore(-5);
+            ShowFeedback("撞到高糖食物  爱心 -1  剩余 " + Mathf.Max(0, MaxObstacleHits - obstacleHits) + "/" + MaxObstacleHits, 1.8f);
+
+            if (obstacleHits >= MaxObstacleHits)
+            {
+                FailRun();
+            }
+            return;
+        }
+
+        if (other.name == "FinishTrigger")
+        {
+            CompleteRun();
         }
     }
 
-    private void ResetRunnerState()
+    private void CompleteRun()
     {
-        runnerTimeLeft = runnerDuration;
-        spawnTimer = 0.4f;
-        playerLane = 1;
-        laneEvents.Clear();
-        runnerHint = "跑酷：A/D 或 ←/→ 切换赛道，躲避红块，吃绿块。";
+        if (state != RunState.Running)
+        {
+            return;
+        }
+
+        state = RunState.Completed;
+        gameManager.AddScore(100);
+        ShowResult(
+            "运动完成",
+            "成功到达终点\n收集爱心：" + heartsCollected
+            + "\n碰撞次数：" + obstacleHits + "/" + MaxObstacleHits
+            + "\n健康积分：" + gameManager.CurrentScore
+            + "\n\n按 Enter 再跑一次");
     }
 
-    private void SpawnLaneEvent()
+    private void FailRun()
     {
-        LaneEvent laneEvent = new LaneEvent
-        {
-            Lane = Random.Range(0, 3),
-            TimeToImpact = RunnerEventTravelSeconds,
-            IsPickup = Random.value < 0.28f
-        };
-        laneEvents.Add(laneEvent);
+        state = RunState.Failed;
+        ShowResult(
+            "需要重来",
+            "碰到高糖食物 3 次\n收集爱心：" + heartsCollected
+            + "\n\n按 R 重新挑战");
     }
 
-    private void OnGUI()
+    private void ShowResult(string title, string body)
     {
-        DrawSessionHeader();
-
-        switch (phase)
+        if (resultTitle != null)
         {
-            case Phase.MealCards:
-                DrawMealCardsUI();
-                break;
-            case Phase.Runner:
-                DrawRunnerUI();
-                break;
-            case Phase.RunnerFailed:
-                DrawRunnerFailedUI();
-                break;
-            case Phase.Completed:
-                DrawCompletedUI();
-                break;
+            resultTitle.text = title;
+        }
+
+        if (resultBody != null)
+        {
+            resultBody.text = body;
+        }
+
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(true);
+        }
+
+        if (retryButton != null)
+        {
+            Text label = retryButton.GetComponentInChildren<Text>();
+            if (label != null)
+            {
+                label.text = state == RunState.Completed ? "再跑一次" : "重新挑战";
+            }
         }
     }
 
-    private void DrawSessionHeader()
+    private void RetryRun()
     {
-        GUILayout.BeginArea(new Rect(12f, 10f, 560f, 40f), GUI.skin.box);
-        GUILayout.Label(
-            string.Format(
-                "Day {0} | 健康值: {1} | 健康积分: {2} | 重试: {3}",
-                gameManager.CurrentDay,
-                gameManager.CurrentHealth,
-                gameManager.CurrentScore,
-                gameManager.RetryCount));
-        GUILayout.EndArea();
+        gameManager.RegisterRetry();
+        SceneManager.LoadScene(replaySceneName);
     }
 
-    private void DrawMealCardsUI()
+    private void ReturnToMenu()
     {
-        GUILayout.BeginArea(new Rect(12f, 56f, 690f, 360f), GUI.skin.box);
-        GUILayout.Label("Day3 · 午餐/晚餐卡牌");
-        GUILayout.Label(cardHint);
-        GUILayout.Space(6f);
+        SceneManager.LoadScene(menuSceneName);
+    }
 
-        for (int i = 0; i < mealCards.Count; i++)
+    private void ShowFeedback(string message, float duration)
+    {
+        if (feedbackText != null)
         {
-            FoodCard card = mealCards[i];
-            bool selected = selectedCards.Contains(i);
-            string marker = selected ? "[已选]" : "[  ]";
-            GUILayout.Label(
-                string.Format(
-                    "{0}. {1} {2}  类型:{3}  健康{4:+#;-#;0}  积分{5:+#;-#;0}",
-                    i + 1,
-                    marker,
-                    card.Name,
-                    card.Category,
-                    card.HealthDelta,
-                    card.ScoreDelta));
+            feedbackText.text = message;
+        }
+        feedbackTimer = duration;
+    }
+
+    private void RefreshHud()
+    {
+        if (healthText != null)
+        {
+            healthText.text = BuildHeartHud();
         }
 
-        GUILayout.Space(8f);
-        GUILayout.Label("平衡要求：主食/蛋白/蔬菜至少各 1，且高糖/高油最多 1。");
-        GUILayout.EndArea();
-    }
-
-    private void DrawRunnerUI()
-    {
-        GUILayout.BeginArea(new Rect(12f, 56f, 620f, 116f), GUI.skin.box);
-        GUILayout.Label("Day3 · 血糖平衡跑酷");
-        GUILayout.Label(runnerHint);
-        GUILayout.Label(string.Format("剩余时间: {0:F1}s", runnerTimeLeft));
-        GUILayout.EndArea();
-
-        Rect track = new Rect(40f, 190f, 560f, 290f);
-        DrawTrack(track);
-    }
-
-    private void DrawTrack(Rect trackRect)
-    {
-        Color oldColor = GUI.color;
-        GUI.Box(trackRect, "三轨跑酷道");
-
-        float laneWidth = trackRect.width / 3f;
-        for (int i = 1; i <= 2; i++)
+        if (scoreText != null)
         {
-            Rect divider = new Rect(trackRect.x + laneWidth * i - 1f, trackRect.y + 2f, 2f, trackRect.height - 4f);
-            GUI.color = new Color(0.75f, 0.75f, 0.75f, 0.9f);
-            GUI.DrawTexture(divider, Texture2D.whiteTexture);
+            scoreText.text = "健康积分  " + gameManager.CurrentScore;
         }
 
-        float playerY = trackRect.y + trackRect.height - 36f;
-        float playerX = trackRect.x + laneWidth * playerLane + laneWidth * 0.5f - 22f;
-        GUI.color = new Color(0.25f, 0.65f, 1f, 0.95f);
-        GUI.DrawTexture(new Rect(playerX, playerY, 44f, 22f), Texture2D.whiteTexture);
-
-        for (int i = 0; i < laneEvents.Count; i++)
+        float progress = Mathf.Clamp01(transform.position.z / Mathf.Max(1f, finishZ));
+        if (progressText != null)
         {
-            LaneEvent laneEvent = laneEvents[i];
-            float progress = 1f - Mathf.Clamp01(laneEvent.TimeToImpact / RunnerEventTravelSeconds);
-            float itemY = trackRect.y + 22f + progress * (trackRect.height - 70f);
-            float itemX = trackRect.x + laneWidth * laneEvent.Lane + laneWidth * 0.5f - 18f;
-
-            GUI.color = laneEvent.IsPickup
-                ? new Color(0.3f, 0.9f, 0.35f, 0.95f)
-                : new Color(0.95f, 0.25f, 0.25f, 0.95f);
-            GUI.DrawTexture(new Rect(itemX, itemY, 36f, 18f), Texture2D.whiteTexture);
+            progressText.text = "运动进度  " + Mathf.RoundToInt(progress * 100f) + "%";
         }
 
-        GUI.color = oldColor;
+        if (healthFill != null)
+        {
+            healthFill.transform.parent.gameObject.SetActive(false);
+        }
+
+        if (progressFill != null)
+        {
+            progressFill.fillAmount = progress;
+        }
     }
 
-    private void DrawRunnerFailedUI()
+    private string BuildHeartHud()
     {
-        GUILayout.BeginArea(new Rect(12f, 56f, 620f, 120f), GUI.skin.box);
-        GUILayout.Label("Day3 · 跑酷失败");
-        GUILayout.Label(runnerHint);
-        GUILayout.Label("按 R 重试跑酷阶段（保留卡牌结算）。");
-        GUILayout.EndArea();
+        int remaining = Mathf.Clamp(MaxObstacleHits - obstacleHits, 0, MaxObstacleHits);
+        string hearts = string.Empty;
+        for (int i = 0; i < remaining; i++)
+        {
+            if (i > 0)
+            {
+                hearts += "  ";
+            }
+
+            hearts += "♥";
+        }
+
+        return "健康  " + hearts;
     }
 
-    private void DrawCompletedUI()
+    private void ApplyChineseFont()
     {
-        GUILayout.BeginArea(new Rect(12f, 56f, 620f, 120f), GUI.skin.box);
-        GUILayout.Label("Day3 完成");
-        GUILayout.Label(runnerHint);
-        GUILayout.Label("按 Enter 进入 Day4。");
-        GUILayout.EndArea();
+        Font font = Font.CreateDynamicFontFromOSFont(
+            new[] { "Microsoft YaHei", "SimHei", "PingFang SC", "Arial" },
+            24);
+
+        Text[] texts = FindObjectsOfType<Text>(true);
+        for (int i = 0; i < texts.Length; i++)
+        {
+            texts[i].font = font;
+        }
     }
 }

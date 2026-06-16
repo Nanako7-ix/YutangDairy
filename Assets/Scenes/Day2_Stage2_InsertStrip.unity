@@ -597,7 +597,8 @@ MonoBehaviour:
   punctureNeedleTip: {fileID: 0}
   glucoseMeter: {fileID: 0}
   testStrip: {fileID: 0}
-  testStripDock: {fileID: 0}
+  testStripDock: {fileID: 2099000002}
+  testStripFinalPose: {fileID: 2099000012}
   testStripInsertProbe: {fileID: 0}
   cartoonHand: {fileID: 0}
   fingerDisinfectPoint: {fileID: 0}
@@ -613,7 +614,7 @@ MonoBehaviour:
   punctureDuration: 0.3
   keepLancetInitialPoseOnStart: 1
   targetDepthLevel: 3
-  stripInsertThreshold: 0.90000004
+  stripInsertThreshold: 1.08
   stripInsertSnapDepth: 0.080000006
   stripExposedLength: 0.29999998
   swabDipThreshold: 1
@@ -621,9 +622,13 @@ MonoBehaviour:
   autoCreateDisinfectionProps: 0
   swabDryColor: {r: 1, g: 1, b: 1, a: 1}
   swabWetColor: {r: 0.67, g: 0.85, b: 1, a: 1}
+  useRecordedLancetSnapPose: 1
+  recordedLancetSnapWorldPos: {x: 4.952, y: 3.606, z: 3.251}
+  recordedLancetSnapWorldEuler: {x: 90, y: 0, z: 0}
+  recordedLancetSnapLocalScale: {x: 10, y: 10, z: 10}
   useRecordedStripSnapPose: 1
-  recordedStripSnapWorldPos: {x: 4.674801, y: 0.5886904, z: -1.5174929}
-  recordedStripSnapWorldEuler: {x: 0, y: 251.2858, z: 0}
+  recordedStripSnapWorldPos: {x: -4.7351995, y: 0.7786908, z: -2.387493}
+  recordedStripSnapWorldEuler: {x: 0, y: 270, z: 0}
   recordedStripSnapLocalScale: {x: 1, y: 1, z: 1}
   autoResolveNiproProps: 1
   gameManager: {fileID: 0}
@@ -1036,8 +1041,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 672343722}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: -0.65500003, y: 0.844, z: -0.181}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: -0.7071068}
+  m_LocalPosition: {x: -0.655, y: 0.844, z: -0.181}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1688,7 +1693,7 @@ Transform:
   m_GameObject: {fileID: 1430956672}
   serializedVersion: 2
   m_LocalRotation: {x: 0.9852557, y: -0.010243184, z: -0.17076786, w: 0.0021484126}
-  m_LocalPosition: {x: -0.003, y: -0.023, z: 0.12}
+  m_LocalPosition: {x: -0.037, y: -0.026, z: -0.381}
   m_LocalScale: {x: 412.13196, y: 412.13196, z: 412.13196}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1775,6 +1780,8 @@ Transform:
   m_Children:
   - {fileID: 1989363185}
   - {fileID: 672343723}
+  - {fileID: 2099000002}
+  - {fileID: 2099000012}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1544073016
@@ -2235,7 +2242,7 @@ Transform:
   m_GameObject: {fileID: 1989363184}
   serializedVersion: 2
   m_LocalRotation: {x: -0.07318235, y: -0.7033096, z: -0.7033096, w: -0.07318235}
-  m_LocalPosition: {x: 0.608, y: 0.897, z: -0.173}
+  m_LocalPosition: {x: 0.149, y: 0.906, z: -0.266}
   m_LocalScale: {x: 3.567051, y: 3.567051, z: 3.567051}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2337,6 +2344,68 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2094674586}
   m_Mesh: {fileID: 8667220959227907227, guid: 71cbdfb3b14acbe448e39dbf8840770f, type: 3}
+--- !u!1 &2099000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2099000002}
+  m_Layer: 0
+  m_Name: NiproStripDock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2099000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: -0.7071068}
+  m_LocalPosition: {x: -0.099, y: 0.844, z: -0.228}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1444969196}
+  m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
+--- !u!1 &2099000011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2099000012}
+  m_Layer: 0
+  m_Name: TestStripFinalPose
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &2099000012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099000011}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.71171725, y: -0.3153802, z: -0.16417134, w: 0.60583967}
+  m_LocalPosition: {x: -0.099, y: 0.844, z: -0.228}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1444969196}
+  m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

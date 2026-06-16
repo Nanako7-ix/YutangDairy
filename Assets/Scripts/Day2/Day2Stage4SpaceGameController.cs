@@ -33,6 +33,10 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
     private float loadTimer;
 
     private Texture2D solidTexture;
+    private GUIStyle uiTitleStyle;
+    private GUIStyle uiLineStyle;
+    private GUIStyle uiPrimaryStyle;
+    private GUIStyle uiHintStyle;
 
     private void Awake()
     {
@@ -53,12 +57,6 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            gameManager.ReturnToMainMenu();
-            return;
-        }
-
         if (completed)
         {
             HandleWinAutoLoad();
@@ -125,19 +123,20 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
 
     private void OnGUI()
     {
-        Rect panel = new Rect(12f, 10f, 760f, 132f);
-        GUILayout.BeginArea(panel, GUI.skin.box);
-        GUILayout.Label("Day2 阶段4：按空格保持小游戏");
-        GUILayout.Label("操作：长按 空格 让指针向右移动，松开向左回落。把指针保持在固定的绿色区间内。");
-        GUILayout.Label("目标：累计保持 " + requiredHoldSeconds.ToString("F0") + " 秒即可完成。按 Esc 返回主菜单。");
         if (completed)
         {
-            GUILayout.Label("完成！稳定保持达标。");
+            DrawGauge();
+            return;
         }
-        else
-        {
-            GUILayout.Label("当前保持：" + holdTimer.ToString("F1") + " / " + requiredHoldSeconds.ToString("F1") + " s");
-        }
+
+        EnsureUiStyles();
+
+        float width = Mathf.Clamp(Screen.width - 140f, 720f, 980f);
+        Rect panel = new Rect((Screen.width - width) * 0.5f, 32f, width, 64f);
+        DrawUiPanel(panel);
+
+        GUILayout.BeginArea(GetPaddedRect(panel, 24f, 14f));
+        GUILayout.Label("按住 Space，保持读数在绿色区域", uiPrimaryStyle);
         GUILayout.EndArea();
 
         DrawGauge();
@@ -155,27 +154,33 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
 
         Color prev = GUI.color;
 
-        GUI.color = new Color(0f, 0f, 0f, 0.55f);
+        GUI.color = new Color(0f, 0f, 0f, 0.22f);
+        GUI.DrawTexture(new Rect(bar.x - 8f, bar.y - 8f, bar.width + 16f, bar.height + 16f), solidTexture);
+
+        GUI.color = new Color(0.04f, 0.08f, 0.12f, 0.88f);
         GUI.DrawTexture(new Rect(bar.x - 4f, bar.y - 4f, bar.width + 8f, bar.height + 8f), solidTexture);
 
-        GUI.color = new Color(0.18f, 0.18f, 0.2f, 1f);
+        GUI.color = new Color(0.12f, 0.18f, 0.22f, 1f);
         GUI.DrawTexture(bar, solidTexture);
 
         float zoneLeftX = bar.x + (zoneMin * bar.width);
         float zoneRightX = bar.x + (zoneMax * bar.width);
         Rect zoneRect = new Rect(zoneLeftX, bar.y, zoneRightX - zoneLeftX, bar.height);
         bool inZone = value >= zoneMin && value <= zoneMax;
-        GUI.color = inZone ? new Color(0.35f, 0.85f, 0.4f, 0.9f) : new Color(0.35f, 0.7f, 0.4f, 0.55f);
+        GUI.color = inZone ? new Color(0.20f, 0.78f, 0.52f, 0.95f) : new Color(0.20f, 0.78f, 0.52f, 0.50f);
         GUI.DrawTexture(zoneRect, solidTexture);
 
         float indicatorX = bar.x + (value * bar.width);
-        GUI.color = new Color(1f, 0.95f, 0.4f, 1f);
+        GUI.color = new Color(0.98f, 0.76f, 0.25f, 1f);
         GUI.DrawTexture(new Rect(indicatorX - 3f, bar.y - 8f, 6f, bar.height + 16f), solidTexture);
+
+        GUI.color = Color.white;
+        GUI.Label(new Rect(bar.x, bar.y - 28f, bar.width, 24f), "稳定区");
 
         if (completed)
         {
-            GUI.color = new Color(0.4f, 1f, 0.5f, 1f);
-            GUI.Label(new Rect(bar.x, bar.y - 26f, bar.width, 24f), "完成");
+            GUI.color = new Color(0.20f, 0.78f, 0.52f, 1f);
+            GUI.Label(new Rect(bar.x, bar.y + bar.height + 10f, bar.width, 24f), "读数完成");
         }
 
         GUI.color = prev;
@@ -192,5 +197,48 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
         solidTexture.SetPixel(0, 0, Color.white);
         solidTexture.Apply();
         solidTexture.hideFlags = HideFlags.HideAndDontSave;
+    }
+
+    private void EnsureUiStyles()
+    {
+        EnsureSolidTexture();
+
+        if (uiTitleStyle != null)
+        {
+            return;
+        }
+
+        uiTitleStyle = CreateLabelStyle(28, FontStyle.Bold, Color.white);
+        uiLineStyle = CreateLabelStyle(18, FontStyle.Normal, new Color(0.84f, 0.91f, 0.96f));
+        uiPrimaryStyle = CreateLabelStyle(21, FontStyle.Bold, Color.white);
+        uiHintStyle = CreateLabelStyle(18, FontStyle.Normal, new Color(0.73f, 0.84f, 0.92f));
+    }
+
+    private static GUIStyle CreateLabelStyle(int fontSize, FontStyle fontStyle, Color color)
+    {
+        return new GUIStyle(GUI.skin.label)
+        {
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            normal = { textColor = color },
+            wordWrap = true
+        };
+    }
+
+    private void DrawUiPanel(Rect rect)
+    {
+        EnsureSolidTexture();
+
+        Color oldColor = GUI.color;
+        GUI.color = new Color(0f, 0f, 0f, 0.22f);
+        GUI.DrawTexture(new Rect(rect.x + 5f, rect.y + 5f, rect.width, rect.height), solidTexture);
+        GUI.color = new Color(0.04f, 0.08f, 0.12f, 0.88f);
+        GUI.DrawTexture(rect, solidTexture);
+        GUI.color = oldColor;
+    }
+
+    private static Rect GetPaddedRect(Rect rect, float horizontal, float vertical)
+    {
+        return new Rect(rect.x + horizontal, rect.y + vertical, rect.width - (horizontal * 2f), rect.height - (vertical * 2f));
     }
 }
