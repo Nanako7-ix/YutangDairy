@@ -4,8 +4,6 @@ using UnityEngine.UI;
 
 public sealed class Day3HomeController : MonoBehaviour
 {
-    private const int MaxObstacleHits = 3;
-
     private enum RunState
     {
         Running,
@@ -25,6 +23,10 @@ public sealed class Day3HomeController : MonoBehaviour
     [SerializeField] private float finishZ = 260f;
 
     [Header("Flow")]
+    [SerializeField] private int currentDay = 3;
+    [SerializeField] private int maxObstacleHits = 3;
+    [SerializeField] private string nextSceneName = "Day4_Stage1_PenAssembly";
+    [SerializeField] private float completeLoadDelaySeconds = 0.8f;
     [SerializeField] private string replaySceneName = "Day3_Home";
     [SerializeField] private string menuSceneName = "MainMenu";
 
@@ -49,6 +51,7 @@ public sealed class Day3HomeController : MonoBehaviour
     private float feedbackTimer;
     private int heartsCollected;
     private int obstacleHits;
+    private float completeLoadTimer;
     private Vector3 visualStartLocalPosition;
     private Quaternion visualStartLocalRotation;
     private Vector3 cameraVelocity;
@@ -56,7 +59,8 @@ public sealed class Day3HomeController : MonoBehaviour
     private void Awake()
     {
         gameManager = GameManager.EnsureInstanceForDemo();
-        gameManager.MarkCurrentDay(3);
+        maxObstacleHits = Mathf.Max(1, maxObstacleHits);
+        gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
 
         if (characterController == null)
         {
@@ -117,9 +121,10 @@ public sealed class Day3HomeController : MonoBehaviour
 
         if (state == RunState.Completed)
         {
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            completeLoadTimer -= Time.deltaTime;
+            if (completeLoadTimer <= 0f)
             {
-                RetryRun();
+                gameManager.LoadScene(nextSceneName);
             }
             return;
         }
@@ -244,9 +249,9 @@ public sealed class Day3HomeController : MonoBehaviour
             invulnerabilityTimer = 1.1f;
             obstacleHits++;
             gameManager.AddScore(-5);
-            ShowFeedback("撞到高糖食物  爱心 -1  剩余 " + Mathf.Max(0, MaxObstacleHits - obstacleHits) + "/" + MaxObstacleHits, 1.8f);
+            ShowFeedback("撞到高糖食物  爱心 -1  剩余 " + Mathf.Max(0, maxObstacleHits - obstacleHits) + "/" + maxObstacleHits, 1.8f);
 
-            if (obstacleHits >= MaxObstacleHits)
+            if (obstacleHits >= maxObstacleHits)
             {
                 FailRun();
             }
@@ -268,12 +273,7 @@ public sealed class Day3HomeController : MonoBehaviour
 
         state = RunState.Completed;
         gameManager.AddScore(100);
-        ShowResult(
-            "运动完成",
-            "成功到达终点\n收集爱心：" + heartsCollected
-            + "\n碰撞次数：" + obstacleHits + "/" + MaxObstacleHits
-            + "\n健康积分：" + gameManager.CurrentScore
-            + "\n\n按 Enter 再跑一次");
+        completeLoadTimer = completeLoadDelaySeconds;
     }
 
     private void FailRun()
@@ -281,7 +281,7 @@ public sealed class Day3HomeController : MonoBehaviour
         state = RunState.Failed;
         ShowResult(
             "需要重来",
-            "碰到高糖食物 3 次\n收集爱心：" + heartsCollected
+            "碰到高糖食物 " + maxObstacleHits + " 次\n收集爱心：" + heartsCollected
             + "\n\n按 R 重新挑战");
     }
 
@@ -363,7 +363,7 @@ public sealed class Day3HomeController : MonoBehaviour
 
     private string BuildHeartHud()
     {
-        int remaining = Mathf.Clamp(MaxObstacleHits - obstacleHits, 0, MaxObstacleHits);
+        int remaining = Mathf.Clamp(maxObstacleHits - obstacleHits, 0, maxObstacleHits);
         string hearts = string.Empty;
         for (int i = 0; i < remaining; i++)
         {

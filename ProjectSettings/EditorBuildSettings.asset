@@ -24,6 +24,21 @@ EditorBuildSettings:
     path: Assets/Scenes/Day4_Home.unity
     guid: c56e8ce699754b044b0ec5783c927592
   - enabled: 1
+    path: Assets/Scenes/Day4_Stage1_PenAssembly.unity
+    guid: bd30bc416f5e4b798ca1802bdbda7f06
+  - enabled: 1
+    path: Assets/Scenes/Day4_Stage2_InsertStrip.unity
+    guid: d07a1b7e5c3142dc97e0eca35ad8360d
+  - enabled: 1
+    path: Assets/Scenes/Day4_Stage3_Puncture.unity
+    guid: aacd2cbecdf54182b3d7ea2b98157881
+  - enabled: 1
+    path: Assets/Scenes/Day4_Stage4_SpaceMiniGame.unity
+    guid: a9110b7a842946a8b50932bda99681e6
+  - enabled: 1
+    path: Assets/Scenes/Day4_Runner.unity
+    guid: 93970ddbbeb745dbafcc2583d7a8199a
+  - enabled: 1
     path: Assets/Scenes/Day5_Rhythm.unity
     guid: 5e5ad5027e36a2145ad0b67e4dd0b057
   - enabled: 1

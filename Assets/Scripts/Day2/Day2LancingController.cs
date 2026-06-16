@@ -17,6 +17,7 @@ public sealed class Day2LancingController : MonoBehaviour
     private const float DefaultPickRadiusPixels = 90f;
 
     [Header("Flow")]
+    [SerializeField] private int currentDay = 2;
     [SerializeField] private string nextSceneName = "MainMenu";
     [SerializeField] private int scoreReward = 20;
     [SerializeField] private int healthReward = 5;
@@ -58,6 +59,8 @@ public sealed class Day2LancingController : MonoBehaviour
     [SerializeField] private float punctureDuration = 0.3f;
     [SerializeField] private bool keepLancetInitialPoseOnStart = true;
     [SerializeField] private int targetDepthLevel = 3;
+    [SerializeField] private bool requireTargetDepthLevel = true;
+    [SerializeField] private string depthAdjustHintText = "调整到合适的挡位";
     [SerializeField] private float stripInsertThreshold = 0.09f;
     [SerializeField] private float stripInsertSnapDepth = 0.008f;
     [SerializeField] private float stripExposedLength = 0.03f;
@@ -159,7 +162,7 @@ public sealed class Day2LancingController : MonoBehaviour
             gameManager = GameManager.EnsureInstanceForDemo();
         }
 
-        gameManager.MarkCurrentDay(2);
+        gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
         ResolveLancetRuntimeReferences();
         ResolveMeterAndStripReferences();
         CaptureInitialPosesIfNeeded();
@@ -474,16 +477,24 @@ public sealed class Day2LancingController : MonoBehaviour
         GUILayout.BeginArea(GetPaddedRect(panel, 24f, 18f));
         GUILayout.Label("采血深度调节", uiTitleStyle);
         GUILayout.Space(6f);
-        GUILayout.Label("当前 " + currentDepthLevel + " 档    目标 " + targetDepthLevel + " 档", uiPrimaryStyle);
+        if (requireTargetDepthLevel)
+        {
+            GUILayout.Label("当前 " + currentDepthLevel + " 档    目标 " + targetDepthLevel + " 档", uiPrimaryStyle);
+        }
+        else
+        {
+            GUILayout.Label(GetDepthAdjustInstructionText() + "    当前 " + currentDepthLevel + " 档", uiPrimaryStyle);
+        }
         GUILayout.Space(12f);
 
-        GUI.enabled = currentStep == StepPenCapReattached;
+        GUI.enabled = currentStep == StepPenCapReattached && currentDepthLevel > MinDepthLevel;
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("降低", uiButtonStyle, GUILayout.Height(48f)))
         {
             AdjustDepthLevel(-1);
         }
 
+        GUI.enabled = currentStep == StepPenCapReattached && currentDepthLevel < MaxDepthLevel;
         if (GUILayout.Button("提高", uiButtonStyle, GUILayout.Height(48f)))
         {
             AdjustDepthLevel(1);
@@ -491,7 +502,7 @@ public sealed class Day2LancingController : MonoBehaviour
         GUILayout.EndHorizontal();
 
         GUILayout.Space(10f);
-        GUI.enabled = currentStep == StepPenCapReattached && currentDepthLevel == targetDepthLevel;
+        GUI.enabled = currentStep == StepPenCapReattached && CanLockCurrentDepthLevel();
         if (GUILayout.Button("锁定挡位", uiButtonStyle, GUILayout.Height(48f)))
         {
             TryLockDepthLevel();
@@ -795,7 +806,6 @@ public sealed class Day2LancingController : MonoBehaviour
             return;
         }
 
-        int clampedTarget = Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel);
         int nextLevel = Mathf.Clamp(currentDepthLevel + delta, MinDepthLevel, MaxDepthLevel);
         if (nextLevel == currentDepthLevel)
         {
@@ -806,6 +816,24 @@ public sealed class Day2LancingController : MonoBehaviour
         statusText = string.Empty;
     }
 
+    private string GetDepthAdjustInstructionText()
+    {
+        return string.IsNullOrWhiteSpace(depthAdjustHintText)
+            ? "调整到合适的挡位"
+            : depthAdjustHintText;
+    }
+
+    private bool CanLockCurrentDepthLevel()
+    {
+        if (!requireTargetDepthLevel)
+        {
+            return true;
+        }
+
+        int clampedTarget = Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel);
+        return currentDepthLevel == clampedTarget;
+    }
+
     private void TryLockDepthLevel()
     {
         if (currentStep != StepPenCapReattached)
@@ -813,14 +841,18 @@ public sealed class Day2LancingController : MonoBehaviour
             return;
         }
 
-        int clampedTarget = Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel);
-        if (currentDepthLevel != clampedTarget)
+        if (requireTargetDepthLevel)
         {
-            statusText = "还没有调到目标挡位，请先调到 " + clampedTarget + " 档。";
-            return;
+            int clampedTarget = Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel);
+            if (currentDepthLevel != clampedTarget)
+            {
+                statusText = "还没有调到目标挡位，请先调到 " + clampedTarget + " 档。";
+                return;
+            }
+
+            targetDepthLevel = clampedTarget;
         }
 
-        targetDepthLevel = clampedTarget;
         currentStep = StepDepthLocked;
         UpdateStepStatusText();
         UpdateHintVisibility();

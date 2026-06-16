@@ -3,6 +3,7 @@ using UnityEngine;
 public sealed class Day2Stage4SpaceGameController : MonoBehaviour
 {
     [Header("Flow")]
+    [SerializeField] private int currentDay = 2;
     [SerializeField] private string nextSceneName = "MainMenu";
     [SerializeField] private bool allowAutoLoadOnWin = true;
     [SerializeField] private float winAutoLoadDelaySeconds = 1.2f;
@@ -13,11 +14,17 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
     [SerializeField] private float riseSpeed = 0.85f;
     [SerializeField] private float fallSpeed = 0.7f;
 
-    [Header("Fixed Target Zone (do not move)")]
+    [Header("Target Zone")]
     [Range(0f, 1f)]
     [SerializeField] private float zoneMin = 0.55f;
     [Range(0f, 1f)]
     [SerializeField] private float zoneMax = 0.8f;
+    [SerializeField] private bool useMovingZone = false;
+    [Range(0.05f, 0.95f)]
+    [SerializeField] private float movingZoneWidth = 0.12f;
+    [SerializeField] private float zoneMoveSpeed = 0.42f;
+    [SerializeField] private float zoneRetargetIntervalMin = 0.65f;
+    [SerializeField] private float zoneRetargetIntervalMax = 1.35f;
 
     [Header("Win Condition")]
     [SerializeField] private float requiredHoldSeconds = 2f;
@@ -31,6 +38,11 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
     private bool rewardGranted;
     private bool loadQueued;
     private float loadTimer;
+    private float activeZoneMin;
+    private float activeZoneMax;
+    private float zoneCenter;
+    private float zoneCenterTarget;
+    private float zoneRetargetTimer;
 
     private Texture2D solidTexture;
     private GUIStyle uiTitleStyle;
@@ -45,7 +57,7 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
             gameManager = GameManager.EnsureInstanceForDemo();
         }
 
-        gameManager.MarkCurrentDay(2);
+        gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
 
         if (zoneMax < zoneMin)
         {
@@ -53,6 +65,74 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
             zoneMin = zoneMax;
             zoneMax = tmp;
         }
+
+        InitializeActiveZone();
+    }
+
+    private void InitializeActiveZone()
+    {
+        if (useMovingZone)
+        {
+            float width = GetActiveZoneWidth();
+            zoneCenter = Random.Range(width * 0.5f, 1f - (width * 0.5f));
+            zoneCenterTarget = zoneCenter;
+            ApplyZoneCenter(zoneCenter);
+            ScheduleNextZoneRetarget();
+            return;
+        }
+
+        activeZoneMin = zoneMin;
+        activeZoneMax = zoneMax;
+    }
+
+    private float GetActiveZoneWidth()
+    {
+        if (useMovingZone)
+        {
+            return Mathf.Clamp(movingZoneWidth, 0.05f, 0.95f);
+        }
+
+        return Mathf.Clamp01(zoneMax - zoneMin);
+    }
+
+    private void ApplyZoneCenter(float center)
+    {
+        float half = GetActiveZoneWidth() * 0.5f;
+        center = Mathf.Clamp(center, half, 1f - half);
+        zoneCenter = center;
+        activeZoneMin = center - half;
+        activeZoneMax = center + half;
+    }
+
+    private void PickRandomZoneTarget()
+    {
+        float half = GetActiveZoneWidth() * 0.5f;
+        zoneCenterTarget = Random.Range(half, 1f - half);
+    }
+
+    private void ScheduleNextZoneRetarget()
+    {
+        float minInterval = Mathf.Max(0.1f, zoneRetargetIntervalMin);
+        float maxInterval = Mathf.Max(minInterval, zoneRetargetIntervalMax);
+        zoneRetargetTimer = Random.Range(minInterval, maxInterval);
+    }
+
+    private void UpdateMovingZone()
+    {
+        zoneRetargetTimer -= Time.deltaTime;
+        if (zoneRetargetTimer <= 0f)
+        {
+            PickRandomZoneTarget();
+            ScheduleNextZoneRetarget();
+        }
+
+        if (Mathf.Approximately(zoneCenter, zoneCenterTarget))
+        {
+            return;
+        }
+
+        zoneCenter = Mathf.MoveTowards(zoneCenter, zoneCenterTarget, zoneMoveSpeed * Time.deltaTime);
+        ApplyZoneCenter(zoneCenter);
     }
 
     private void Update()
@@ -67,7 +147,12 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
         value += (holding ? riseSpeed : -fallSpeed) * Time.deltaTime;
         value = Mathf.Clamp01(value);
 
-        bool inZone = value >= zoneMin && value <= zoneMax;
+        if (useMovingZone)
+        {
+            UpdateMovingZone();
+        }
+
+        bool inZone = value >= activeZoneMin && value <= activeZoneMax;
         if (inZone)
         {
             holdTimer += Time.deltaTime;
@@ -136,7 +221,7 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
         DrawUiPanel(panel);
 
         GUILayout.BeginArea(GetPaddedRect(panel, 24f, 14f));
-        GUILayout.Label("按住 Space，保持读数在绿色区域", uiPrimaryStyle);
+        GUILayout.Label("保持光标在绿色区域", uiPrimaryStyle);
         GUILayout.EndArea();
 
         DrawGauge();
@@ -163,10 +248,10 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
         GUI.color = new Color(0.12f, 0.18f, 0.22f, 1f);
         GUI.DrawTexture(bar, solidTexture);
 
-        float zoneLeftX = bar.x + (zoneMin * bar.width);
-        float zoneRightX = bar.x + (zoneMax * bar.width);
+        float zoneLeftX = bar.x + (activeZoneMin * bar.width);
+        float zoneRightX = bar.x + (activeZoneMax * bar.width);
         Rect zoneRect = new Rect(zoneLeftX, bar.y, zoneRightX - zoneLeftX, bar.height);
-        bool inZone = value >= zoneMin && value <= zoneMax;
+        bool inZone = value >= activeZoneMin && value <= activeZoneMax;
         GUI.color = inZone ? new Color(0.20f, 0.78f, 0.52f, 0.95f) : new Color(0.20f, 0.78f, 0.52f, 0.50f);
         GUI.DrawTexture(zoneRect, solidTexture);
 

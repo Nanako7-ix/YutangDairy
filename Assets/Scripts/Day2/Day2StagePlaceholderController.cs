@@ -3,6 +3,7 @@ using UnityEngine;
 
 public sealed class Day2StagePlaceholderController : MonoBehaviour
 {
+    [SerializeField] private int currentDay = 2;
     [SerializeField] private int stageIndex = 3;
     [SerializeField] private string stageTitle = "阶段3：扎手指测血糖";
     [SerializeField] [TextArea(2, 4)] private string stageDescription = "将棉签拖到中指附近，完成消毒动作。";
@@ -62,7 +63,7 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
             gameManager = GameManager.EnsureInstanceForDemo();
         }
 
-        gameManager.MarkCurrentDay(2);
+        gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
         ResolveRuntimeReferences();
         CaptureSwabInitialPose();
         CapturePenInitialPose();
