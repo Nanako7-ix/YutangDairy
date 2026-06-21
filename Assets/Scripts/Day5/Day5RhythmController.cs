@@ -329,7 +329,7 @@ public sealed class Day5RhythmController : MonoBehaviour
         GUILayout.Label("4K 下落式音游    从左到右：W  A  S  D", lineStyle);
 
         float progress = Mathf.Clamp01(Mathf.Max(0f, GetSongTime()) / Mathf.Max(1f, songDuration));
-        string scoreLine = "健康积分 " + gameManager.CurrentScore
+        string scoreLine = "得分 " + gameManager.CurrentScore
             + "   |   连击 " + combo
             + "   |   最高连击 " + bestCombo
             + "   |   准确率 " + Mathf.RoundToInt(GetAccuracy() * 100f) + "%";

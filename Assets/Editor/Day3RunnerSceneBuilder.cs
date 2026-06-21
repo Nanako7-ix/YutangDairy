@@ -10,6 +10,9 @@ public static class Day3RunnerSceneBuilder
 {
     private const string ScenePath = "Assets/Scenes/Day3_Home.unity";
     private const string MaterialFolder = "Assets/Materials/Day3Runner";
+    private const string RunnerModelPath = "Assets/External/Day3Runner/KenneyProtagonist/Model/characterMedium.fbx";
+    private const string RunnerMaterialPath = MaterialFolder + "/KenneyRunner.mat";
+    private const string RunnerAnimatorPath = MaterialFolder + "/KenneyRunner.controller";
     private const float TrackLength = 285f;
     private const float FinishZ = 260f;
     private static readonly float[] Lanes = { -3f, 0f, 3f };
@@ -131,15 +134,29 @@ public static class Day3RunnerSceneBuilder
 
         GameObject playerVisual = new GameObject("PlayerVisual");
         playerVisual.transform.SetParent(player.transform, false);
-        GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/External/Day3Runner/Runner/character-oopi.fbx");
+        GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(RunnerModelPath);
         if (modelAsset != null)
         {
             GameObject model = PrefabUtility.InstantiatePrefab(modelAsset) as GameObject;
-            model.name = "OopiRunner";
+            model.name = "KenneyRunner";
             model.transform.SetParent(playerVisual.transform, false);
-            NormalizeModel(model, 1.75f);
-            model.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-            AssignMaterial(model, GetMaterial("RunnerCharacter", new Color(0.22f, 0.58f, 0.92f)));
+            NormalizeModel(model, 2.2f);
+            model.transform.localRotation = Quaternion.identity;
+
+            Material runnerMaterial = AssetDatabase.LoadAssetAtPath<Material>(RunnerMaterialPath);
+            if (runnerMaterial != null)
+            {
+                AssignMaterial(model, runnerMaterial);
+            }
+
+            RuntimeAnimatorController animatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(RunnerAnimatorPath);
+            Animator animator = model.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = model.AddComponent<Animator>();
+            }
+            animator.runtimeAnimatorController = animatorController;
+            animator.applyRootMotion = false;
         }
         else
         {
@@ -295,7 +312,7 @@ public static class Day3RunnerSceneBuilder
         Text healthText = CreateText(topPanel.transform, "HealthText", "健康  ♥  ♥  ♥", 24, TextAnchor.MiddleLeft, font, heartColor);
         SetRect(healthText.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(28f, 14f), new Vector2(280f, 34f), Vector2.zero);
 
-        Text scoreText = CreateText(topPanel.transform, "ScoreText", "健康积分 0", 22, TextAnchor.MiddleCenter, font, Color.white);
+        Text scoreText = CreateText(topPanel.transform, "ScoreText", "得分 0", 22, TextAnchor.MiddleCenter, font, Color.white);
         SetRect(scoreText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 16f), new Vector2(300f, 30f), new Vector2(0.5f, 0f));
 
         Text progressText = CreateText(topPanel.transform, "ProgressText", "运动进度 0%", 22, TextAnchor.MiddleRight, font, Color.white);

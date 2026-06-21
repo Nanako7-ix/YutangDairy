@@ -11,7 +11,7 @@ public sealed class GameManager : MonoBehaviour
     private const string BestScoreKey = "YutangDiary_BestHealthScore";
 
     public static GameManager Instance { get; private set; }
-    public static int BestHealthScore => PlayerPrefs.GetInt(BestScoreKey, 0);
+    public static int BestScore => PlayerPrefs.GetInt(BestScoreKey, 0);
     public static GameManager EnsureInstanceForDemo()
     {
         if (Instance != null)
@@ -151,7 +151,7 @@ public sealed class GameManager : MonoBehaviour
 
     private void SaveBestScoreIfNeeded()
     {
-        if (CurrentScore <= BestHealthScore)
+        if (CurrentScore <= BestScore)
         {
             return;
         }

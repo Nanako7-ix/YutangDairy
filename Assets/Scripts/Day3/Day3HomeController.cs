@@ -30,6 +30,13 @@ public sealed class Day3HomeController : MonoBehaviour
     [SerializeField] private string replaySceneName = "Day3_Home";
     [SerializeField] private string menuSceneName = "MainMenu";
 
+    [Header("Score Pickups")]
+    [SerializeField] private string scorePickupPrefix = "Heart_";
+    [SerializeField] private string scorePickupDisplayName = "爱心";
+    [SerializeField] private int scorePickupValue = 20;
+    [SerializeField] private int completionScoreValue = 100;
+    [SerializeField] private int retryScoreCost = 20;
+
     [Header("HUD")]
     [SerializeField] private Text healthText;
     [SerializeField] private Text scoreText;
@@ -50,6 +57,7 @@ public sealed class Day3HomeController : MonoBehaviour
     private float invulnerabilityTimer;
     private float feedbackTimer;
     private int heartsCollected;
+    private int pendingRunScore;
     private int obstacleHits;
     private float completeLoadTimer;
     private Vector3 visualStartLocalPosition;
@@ -235,20 +243,26 @@ public sealed class Day3HomeController : MonoBehaviour
             return;
         }
 
-        if (other.name.StartsWith("Heart_"))
+        if (other.name.StartsWith(scorePickupPrefix))
         {
             heartsCollected++;
-            gameManager.AddScore(20);
-            ShowFeedback("收集爱心  积分 +20", 1.6f);
+            pendingRunScore += Mathf.Max(0, scorePickupValue);
+            ShowFeedback("收集" + scorePickupDisplayName + "  本局得分 +" + scorePickupValue, 1.6f);
             Destroy(other.gameObject);
             return;
         }
 
-        if (other.name.StartsWith("Obstacle_") && invulnerabilityTimer <= 0f)
+        if (other.name.StartsWith("Obstacle_"))
         {
+            Destroy(other.gameObject);
+
+            if (invulnerabilityTimer > 0f)
+            {
+                return;
+            }
+
             invulnerabilityTimer = 1.1f;
             obstacleHits++;
-            gameManager.AddScore(-5);
             ShowFeedback("撞到高糖食物  爱心 -1  剩余 " + Mathf.Max(0, maxObstacleHits - obstacleHits) + "/" + maxObstacleHits, 1.8f);
 
             if (obstacleHits >= maxObstacleHits)
@@ -272,7 +286,8 @@ public sealed class Day3HomeController : MonoBehaviour
         }
 
         state = RunState.Completed;
-        gameManager.AddScore(100);
+        gameManager.AddScore(pendingRunScore + Mathf.Max(0, completionScoreValue));
+        pendingRunScore = 0;
         completeLoadTimer = completeLoadDelaySeconds;
     }
 
@@ -281,7 +296,9 @@ public sealed class Day3HomeController : MonoBehaviour
         state = RunState.Failed;
         ShowResult(
             "需要重来",
-            "碰到高糖食物 " + maxObstacleHits + " 次\n收集爱心：" + heartsCollected
+            "碰到高糖食物 " + maxObstacleHits + " 次\n收集" + scorePickupDisplayName + "：" + heartsCollected
+            + "\n本局临时得分：" + pendingRunScore + "（未结算）"
+            + "\n重试扣除 " + retryScoreCost + " 分"
             + "\n\n按 R 重新挑战");
     }
 
@@ -314,6 +331,8 @@ public sealed class Day3HomeController : MonoBehaviour
 
     private void RetryRun()
     {
+        int cost = Mathf.Min(Mathf.Max(0, retryScoreCost), gameManager.CurrentScore);
+        gameManager.AddScore(-cost);
         gameManager.RegisterRetry();
         SceneManager.LoadScene(replaySceneName);
     }
@@ -341,7 +360,7 @@ public sealed class Day3HomeController : MonoBehaviour
 
         if (scoreText != null)
         {
-            scoreText.text = "健康积分  " + gameManager.CurrentScore;
+            scoreText.text = "得分  " + (gameManager.CurrentScore + pendingRunScore);
         }
 
         float progress = Mathf.Clamp01(transform.position.z / Mathf.Max(1f, finishZ));
@@ -357,7 +376,13 @@ public sealed class Day3HomeController : MonoBehaviour
 
         if (progressFill != null)
         {
-            progressFill.fillAmount = progress;
+            progressFill.type = Image.Type.Simple;
+
+            RectTransform fillRect = progressFill.rectTransform;
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = new Vector2(progress, 1f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
         }
     }
 

@@ -43,6 +43,8 @@ public sealed class Day2LancingController : MonoBehaviour
     [SerializeField] private Transform testStripDock;
     [SerializeField] private Transform testStripFinalPose;
     [SerializeField] private Transform testStripInsertProbe;
+    [SerializeField] private Transform testStripAssembly;
+    [SerializeField] private Transform testStripAssemblyFinalPose;
     [SerializeField] private Transform cartoonHand;
     [SerializeField] private Transform fingerDisinfectPoint;
     [SerializeField] private Transform alcoholSwab;
@@ -103,6 +105,10 @@ public sealed class Day2LancingController : MonoBehaviour
     [SerializeField] private Quaternion stripInitialWorldRot;
     [SerializeField] private Vector3 stripInitialLocalScale = Vector3.one;
     [SerializeField] private bool stripInitialPoseCaptured;
+    [SerializeField] private Vector3 stripAssemblyInitialLocalPosition;
+    [SerializeField] private Quaternion stripAssemblyInitialLocalRotation;
+    [SerializeField] private Vector3 stripAssemblyInitialLocalScale = Vector3.one;
+    [SerializeField] private bool stripAssemblyInitialPoseCaptured;
     [SerializeField] private Vector3 swabInitialWorldPos;
     [SerializeField] private Quaternion swabInitialWorldRot;
     [SerializeField] private Vector3 swabInitialLocalScale = Vector3.one;
@@ -961,6 +967,13 @@ public sealed class Day2LancingController : MonoBehaviour
 
         testStrip.SetPositionAndRotation(stripInitialWorldPos, stripInitialWorldRot);
         testStrip.localScale = stripInitialLocalScale;
+
+        if (testStripAssembly != null && stripAssemblyInitialPoseCaptured)
+        {
+            testStripAssembly.localPosition = stripAssemblyInitialLocalPosition;
+            testStripAssembly.localRotation = stripAssemblyInitialLocalRotation;
+            testStripAssembly.localScale = stripAssemblyInitialLocalScale;
+        }
     }
 
     private void ReturnSwabToInitialPose()
@@ -1244,12 +1257,22 @@ public sealed class Day2LancingController : MonoBehaviour
         if (testStripFinalPose != null)
         {
             CopyTransformPose(testStrip, testStripFinalPose);
+            ApplyTestStripAssemblyFinalPose();
             return true;
         }
 
         testStrip.SetPositionAndRotation(recordedStripSnapWorldPos, Quaternion.Euler(recordedStripSnapWorldEuler));
         testStrip.localScale = recordedStripSnapLocalScale;
+        ApplyTestStripAssemblyFinalPose();
         return true;
+    }
+
+    private void ApplyTestStripAssemblyFinalPose()
+    {
+        if (testStripAssembly != null && testStripAssemblyFinalPose != null)
+        {
+            CopyTransformPose(testStripAssembly, testStripAssemblyFinalPose);
+        }
     }
 
     private static void CopyTransformPose(Transform target, Transform source)
@@ -1538,11 +1561,25 @@ public sealed class Day2LancingController : MonoBehaviour
 
         if (testStripInsertProbe == null && testStrip != null)
         {
-            testStripInsertProbe = FindChildByNameContains(testStrip, "bloodreceiver");
+            testStripInsertProbe = FindChildByNameContains(testStrip, "TestStripInsertProbe");
             if (testStripInsertProbe == null)
             {
                 testStripInsertProbe = FindChildByNameContains(testStrip, "reader");
             }
+            if (testStripInsertProbe == null)
+            {
+                testStripInsertProbe = FindChildByNameContains(testStrip, "bloodreceiver");
+            }
+        }
+
+        if (testStripAssembly == null && testStrip != null)
+        {
+            testStripAssembly = FindChildByNameContains(testStrip, "TestStripAssembly");
+        }
+
+        if (testStripAssemblyFinalPose == null && testStrip != null)
+        {
+            testStripAssemblyFinalPose = FindChildByNameContains(testStrip, "TestStripAssemblyFinalPose");
         }
     }
 
@@ -2020,6 +2057,14 @@ public sealed class Day2LancingController : MonoBehaviour
             stripInitialWorldRot = testStrip.rotation;
             stripInitialLocalScale = testStrip.localScale;
             stripInitialPoseCaptured = true;
+        }
+
+        if (testStripAssembly != null)
+        {
+            stripAssemblyInitialLocalPosition = testStripAssembly.localPosition;
+            stripAssemblyInitialLocalRotation = testStripAssembly.localRotation;
+            stripAssemblyInitialLocalScale = testStripAssembly.localScale;
+            stripAssemblyInitialPoseCaptured = true;
         }
 
         if (alcoholSwab != null)

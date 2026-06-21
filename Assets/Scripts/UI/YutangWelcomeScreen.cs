@@ -23,7 +23,7 @@ public void Refresh()
     {
         if (bestScoreText != null)
         {
-            bestScoreText.text = "历史最高健康积分：" + GameManager.BestHealthScore;
+            bestScoreText.text = "历史最高得分：" + GameManager.BestScore;
         }
 
         if (versionText != null)

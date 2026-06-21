@@ -548,7 +548,7 @@ public sealed class Day2HomeController : MonoBehaviour
         GUILayout.BeginArea(new Rect(12f, 10f, 700f, 42f), GUI.skin.box);
         GUILayout.Label(
             string.Format(
-                "Day {0} | 健康值: {1} | 健康积分: {2} | 重试: {3}",
+                "Day {0} | 健康值: {1} | 得分: {2} | 重试: {3}",
                 gameManager.CurrentDay,
                 gameManager.CurrentHealth,
                 gameManager.CurrentScore,

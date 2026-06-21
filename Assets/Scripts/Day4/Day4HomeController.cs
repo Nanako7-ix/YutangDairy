@@ -276,7 +276,7 @@ public sealed class Day4HomeController : MonoBehaviour
         GUILayout.BeginArea(new Rect(12f, 10f, 560f, 40f), GUI.skin.box);
         GUILayout.Label(
             string.Format(
-                "Day {0} | 健康值: {1} | 健康积分: {2} | 重试: {3}",
+                "Day {0} | 健康值: {1} | 得分: {2} | 重试: {3}",
                 gameManager.CurrentDay,
                 gameManager.CurrentHealth,
                 gameManager.CurrentScore,
