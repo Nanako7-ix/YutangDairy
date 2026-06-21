@@ -122,6 +122,7 @@ public sealed class GameManager : MonoBehaviour
                 break;
             case "Day4_Home":
             case "Day4_Runner":
+            case "Day4_DietMatch_Dinner":
             case "Day4_Stage1_PenAssembly":
             case "Day4_Stage2_InsertStrip":
             case "Day4_Stage3_Puncture":

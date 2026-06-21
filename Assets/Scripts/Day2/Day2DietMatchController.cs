@@ -17,6 +17,7 @@ public sealed class Day2DietMatchController : MonoBehaviour
     }
 
     [Header("Display")]
+    [SerializeField] private int currentDay = 2;
     [SerializeField] private string titleText = "第二天 · 午餐搭配";
     [SerializeField] private string mealName = "午餐";
 
@@ -79,7 +80,7 @@ public sealed class Day2DietMatchController : MonoBehaviour
             gameManager = GameManager.EnsureInstanceForDemo();
         }
 
-        gameManager.MarkCurrentDay(2);
+        gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
 
         if (cards == null || cards.Count == 0)
         {

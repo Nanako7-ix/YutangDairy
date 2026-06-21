@@ -122,7 +122,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &862120124
+--- !u!1 &586114055
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,61 +130,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 862120126}
-  - component: {fileID: 862120125}
-  m_Layer: 0
-  m_Name: Day5RhythmController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &862120125
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 862120124}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d16ac4e0961c5aa46970b329721edd1f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  menuSceneName: MainMenu
-  introDelaySeconds: 1
-  hitScore: 10
-  perfectBonus: 5
-  completionScore: 80
-  completionHealthReward: 5
-  noteTravelSeconds: 2.2
-  perfectWindowSeconds: 0.14
-  goodWindowSeconds: 0.3
---- !u!4 &862120126
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 862120124}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1215364883
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1215364885}
-  - component: {fileID: 1215364884}
+  - component: {fileID: 586114058}
+  - component: {fileID: 586114057}
+  - component: {fileID: 586114056}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -192,17 +140,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &1215364884
+--- !u!81 &586114056
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 586114055}
+  m_Enabled: 1
+--- !u!20 &586114057
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1215364883}
+  m_GameObject: {fileID: 586114055}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.53, g: 0.73, b: 0.84, a: 1}
+  m_BackGroundColor: {r: 0.16, g: 0.18, b: 0.22, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -226,9 +182,9 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 1
+  orthographic: 0
   orthographic size: 5
-  m_Depth: 0
+  m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -243,22 +199,22 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &1215364885
+--- !u!4 &586114058
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1215364883}
+  m_GameObject: {fileID: 586114055}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1269726545
+--- !u!1 &1620105770
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -266,8 +222,96 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1269726547}
-  - component: {fileID: 1269726546}
+  - component: {fileID: 1620105772}
+  - component: {fileID: 1620105771}
+  m_Layer: 0
+  m_Name: Day4DietMatch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1620105771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620105770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 311b0faeee3a15e41a85db2b9588711e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentDay: 4
+  titleText: "\u7B2C\u56DB\u5929 \xB7 \u665A\u9910\u642D\u914D"
+  mealName: "\u665A\u9910"
+  nextSceneName: Day5_Rhythm
+  allowAutoLoadOnWin: 1
+  winAutoLoadDelaySeconds: 1.8
+  satisfactionScoreMultiplier: 10
+  grantHealthBonusOnValidMeal: 1
+  healthBonus: 5
+  sugarMin: 25
+  sugarMax: 45
+  repeatPreferenceFactor: 0.5
+  cards:
+  - displayName: "\u6E05\u7092\u65F6\u852C"
+    sugarPerPortion: 8
+    basePreference: 2
+    maxPortions: 2
+    sprite: {fileID: 21300000, guid: 8e39b777325b4854bb3920fe1787b2c6, type: 3}
+    portions: 0
+  - displayName: "\u7C97\u7C73\u996D"
+    sugarPerPortion: 28
+    basePreference: 3
+    maxPortions: 1
+    sprite: {fileID: 21300000, guid: ef8b273c5392412f9199df84cdac170d, type: 3}
+    portions: 0
+  - displayName: "\u6E05\u84B8\u9C7C"
+    sugarPerPortion: 5
+    basePreference: 3
+    maxPortions: 2
+    sprite: {fileID: 21300000, guid: afd0aac9daa44d668716aa21196e393c, type: 3}
+    portions: 0
+  - displayName: "\u5357\u74DC\u5C0F\u7C73\u7CBE\u7CA5"
+    sugarPerPortion: 24
+    basePreference: 4
+    maxPortions: 1
+    sprite: {fileID: 21300000, guid: aa78e90f0e9a4628b25b5f449d66543c, type: 3}
+    portions: 0
+  - displayName: "\u82A9\u679C\u897F\u7C73\u9732"
+    sugarPerPortion: 48
+    basePreference: 6
+    maxPortions: 1
+    sprite: {fileID: 21300000, guid: c1a08a70388f44f1bf871f757c6989f1, type: 3}
+    portions: 0
+  gameManager: {fileID: 0}
+--- !u!4 &1620105772
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620105770}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1624999747
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1624999749}
+  - component: {fileID: 1624999748}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -275,25 +319,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!108 &1269726546
+--- !u!108 &1624999748
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1269726545}
+  m_GameObject: {fileID: 1624999747}
   m_Enabled: 1
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.8
+  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -337,25 +381,25 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
---- !u!4 &1269726547
+--- !u!4 &1624999749
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1269726545}
+  m_GameObject: {fileID: 1624999747}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821794, y: -0.23456973, z: 0.10938166, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 862120126}
-  - {fileID: 1215364885}
-  - {fileID: 1269726547}
+  - {fileID: 586114058}
+  - {fileID: 1624999749}
+  - {fileID: 1620105772}

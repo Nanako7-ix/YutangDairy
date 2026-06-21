@@ -22740,7 +22740,7 @@ MonoBehaviour:
   finishZ: 260
   currentDay: 4
   maxObstacleHits: 1
-  nextSceneName: Day4_Home
+  nextSceneName: Day4_DietMatch_Dinner
   completeLoadDelaySeconds: 0.8
   replaySceneName: Day4_Runner
   menuSceneName: MainMenu
