@@ -8,6 +8,23 @@ using UnityEngine.UI;
 public static class Day1TopDownSceneBuilder
 {
     private const string ScenePath = "Assets/Scenes/Day1_Hospital.unity";
+    private const string PlayerModelPath = "Assets/External/Day3Runner/KenneyProtagonist/Model/characterMedium.fbx";
+    private const string PlayerMaterialPath = "Assets/Materials/Day3Runner/KenneyRunner.mat";
+    private const string PlayerAnimatorPath = "Assets/Materials/Day3Runner/KenneyDay1.controller";
+    private static readonly string[] EnemyFoodPaths =
+    {
+        "Assets/External/Day3Runner/Food/cake.fbx",
+        "Assets/External/Day3Runner/Food/cupcake.fbx",
+        "Assets/External/Day3Runner/Food/donut-chocolate.fbx",
+        "Assets/External/Day3Runner/Food/ice-cream.fbx"
+    };
+    private static readonly string[] EnemyFoodMaterialPaths =
+    {
+        "Assets/Materials/Day3Runner/SugarFood0.mat",
+        "Assets/Materials/Day3Runner/SugarFood1.mat",
+        "Assets/Materials/Day3Runner/SugarFood2.mat",
+        "Assets/Materials/Day3Runner/SugarFood4.mat"
+    };
 
     [MenuItem("Tools/Yutang Diary/Rebuild Day 1 As Topdown 2D")]
     public static void RebuildFromMenu()
@@ -100,7 +117,13 @@ public static class Day1TopDownSceneBuilder
 
         CreateCube(environment.transform, "ClinicCross_Vert", new Vector3(4.1f, 1.9f, 1.9f), new Vector3(0.35f, 1.3f, 0.2f), signMaterial);
         CreateCube(environment.transform, "ClinicCross_Horz", new Vector3(4.1f, 1.9f, 1.9f), new Vector3(1.1f, 0.35f, 0.2f), signMaterial);
-        CreateCube(environment.transform, "DoctorZoneMarker", new Vector3(4.7f, 0.03f, 5.7f), new Vector3(2.2f, 0.06f, 1.8f), markerMaterial);
+        GameObject doctorZoneMarker = CreateCube(
+            environment.transform,
+            "DoctorZoneMarker",
+            new Vector3(4.7f, 0.03f, 5.7f),
+            new Vector3(2.2f, 0.06f, 1.8f),
+            markerMaterial);
+        doctorZoneMarker.GetComponent<Collider>().isTrigger = true;
 
         GameObject doctor = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         doctor.name = "Doctor";
@@ -113,11 +136,13 @@ public static class Day1TopDownSceneBuilder
         player.name = "Player";
         player.transform.position = new Vector3(0f, 1f, -8.0f);
         player.GetComponent<Renderer>().sharedMaterial = playerMaterial;
+        AttachPlayerVisual(player);
         Object.DestroyImmediate(player.GetComponent<CapsuleCollider>());
         CharacterController characterController = player.AddComponent<CharacterController>();
         characterController.height = 2f;
         characterController.radius = 0.48f;
         characterController.center = Vector3.zero;
+        characterController.stepOffset = 0f;
         Day1PlayerController playerController = player.AddComponent<Day1PlayerController>();
 
         CreateEnemy("Enemy_A", new Vector3(-8.8f, 1f, -0.5f), enemyMaterial, new Vector3(-8.8f, 1f, 0.8f), new Vector2(5.0f, 8.0f), 1.6f, 1.25f);
@@ -222,6 +247,7 @@ public static class Day1TopDownSceneBuilder
         enemy.transform.position = position;
         enemy.transform.localScale = new Vector3(0.9f, 1f, 0.9f);
         enemy.GetComponent<Renderer>().sharedMaterial = material;
+        AttachFoodVisual(enemy, name);
 
         CapsuleCollider capsuleCollider = enemy.GetComponent<CapsuleCollider>();
         if (capsuleCollider != null)
@@ -242,6 +268,132 @@ public static class Day1TopDownSceneBuilder
         serializedEnemy.FindProperty("moveSpeed").floatValue = moveSpeed;
         serializedEnemy.FindProperty("catchDistance").floatValue = catchDistance;
         serializedEnemy.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void AttachPlayerVisual(GameObject player)
+    {
+        GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerModelPath);
+        if (asset == null)
+        {
+            return;
+        }
+
+        GameObject visual = PrefabUtility.InstantiatePrefab(asset) as GameObject;
+        visual.name = "KenneyPlayerVisual";
+        visual.transform.SetParent(player.transform, false);
+
+        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length > 0)
+        {
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            visual.transform.localScale = Vector3.one * (2.5f / Mathf.Max(0.01f, bounds.size.y));
+
+            bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            visual.transform.position += new Vector3(
+                player.transform.position.x - bounds.center.x,
+                0.05f - bounds.min.y,
+                player.transform.position.z - bounds.center.z);
+
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(PlayerMaterialPath);
+            if (material != null)
+            {
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    Material[] materials = renderers[i].sharedMaterials;
+                    for (int m = 0; m < materials.Length; m++)
+                    {
+                        materials[m] = material;
+                    }
+                    renderers[i].sharedMaterials = materials;
+                }
+            }
+        }
+
+        Animator animator = visual.GetComponent<Animator>();
+        if (animator == null)
+        {
+            animator = visual.AddComponent<Animator>();
+        }
+        animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(PlayerAnimatorPath);
+        animator.applyRootMotion = false;
+
+        Renderer capsuleRenderer = player.GetComponent<Renderer>();
+        if (capsuleRenderer != null)
+        {
+            capsuleRenderer.enabled = false;
+        }
+    }
+
+    private static void AttachFoodVisual(GameObject enemy, string enemyName)
+    {
+        int index = Mathf.Clamp(enemyName[enemyName.Length - 1] - 'A', 0, EnemyFoodPaths.Length - 1);
+        GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(EnemyFoodPaths[index]);
+        Material foodMaterial = AssetDatabase.LoadAssetAtPath<Material>(EnemyFoodMaterialPaths[index]);
+        if (asset == null)
+        {
+            return;
+        }
+
+        GameObject visual = PrefabUtility.InstantiatePrefab(asset) as GameObject;
+        visual.name = "HighSugarFoodVisual";
+        visual.transform.SetParent(enemy.transform, false);
+        visual.transform.localRotation = Quaternion.Euler(0f, index * 45f, 0f);
+
+        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length > 0)
+        {
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            float largestDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            if (largestDimension > 0.0001f)
+            {
+                visual.transform.localScale *= 1.65f / largestDimension;
+            }
+
+            bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            visual.transform.position += new Vector3(
+                enemy.transform.position.x - bounds.center.x,
+                0.05f - bounds.min.y,
+                enemy.transform.position.z - bounds.center.z);
+
+            if (foodMaterial != null)
+            {
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    Material[] materials = renderers[i].sharedMaterials;
+                    for (int m = 0; m < materials.Length; m++)
+                    {
+                        materials[m] = foodMaterial;
+                    }
+                    renderers[i].sharedMaterials = materials;
+                }
+            }
+        }
+
+        Renderer capsuleRenderer = enemy.GetComponent<Renderer>();
+        if (capsuleRenderer != null)
+        {
+            capsuleRenderer.enabled = false;
+        }
     }
 
     private static GameObject CreateCube(Transform parent, string name, Vector3 position, Vector3 scale, Material material)

@@ -12,6 +12,13 @@ public sealed class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
     public static int BestScore => PlayerPrefs.GetInt(BestScoreKey, 0);
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Bootstrap()
+    {
+        EnsureInstanceForDemo();
+    }
+
     public static GameManager EnsureInstanceForDemo()
     {
         if (Instance != null)
@@ -41,6 +48,7 @@ public sealed class GameManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        GameBackgroundMusic.Ensure(gameObject);
     }
 
     private void OnEnable()

@@ -346,8 +346,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.0063000284, y: 0.027299998, z: 0.0063000172}
-  m_Center: {x: 0.030000027, y: -0.0041500023, z: -0.0059999684}
+  m_Size: {x: 0.006300019, y: 0.027300004, z: 0.006300006}
+  m_Center: {x: 0.030000042, y: -0.004150027, z: -0.005999963}
 --- !u!4 &191710010
 Transform:
   m_ObjectHideFlags: 0
@@ -649,6 +649,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 925b3b0c5bb7c824c854ac2834437326, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentDay: 2
   nextSceneName: Day2_Stage2_InsertStrip
   scoreReward: 20
   healthReward: 5
@@ -670,7 +671,10 @@ MonoBehaviour:
   glucoseMeter: {fileID: 0}
   testStrip: {fileID: 0}
   testStripDock: {fileID: 0}
+  testStripFinalPose: {fileID: 0}
   testStripInsertProbe: {fileID: 0}
+  testStripAssembly: {fileID: 0}
+  testStripAssemblyFinalPose: {fileID: 0}
   cartoonHand: {fileID: 0}
   fingerDisinfectPoint: {fileID: 0}
   alcoholSwab: {fileID: 0}
@@ -685,6 +689,8 @@ MonoBehaviour:
   punctureDuration: 0.3
   keepLancetInitialPoseOnStart: 1
   targetDepthLevel: 3
+  requireTargetDepthLevel: 1
+  depthAdjustHintText: "\u8C03\u6574\u5230\u5408\u9002\u7684\u6321\u4F4D"
   stripInsertThreshold: 0.90000004
   stripInsertSnapDepth: 0.080000006
   stripExposedLength: 0.29999998
@@ -702,6 +708,21 @@ MonoBehaviour:
   recordedStripSnapWorldEuler: {x: 0, y: 251.2858, z: 0}
   recordedStripSnapLocalScale: {x: 1, y: 1, z: 1}
   autoResolveNiproProps: 1
+  capToTrayArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
+  lancetInstallArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 40}
+  safetyCapArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
+  penCapReattachArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
+  testStripArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
   gameManager: {fileID: 0}
   currentStep: 0
   currentDepthLevel: 1
@@ -725,6 +746,10 @@ MonoBehaviour:
   stripInitialWorldRot: {x: 0, y: 0, z: 0, w: 0}
   stripInitialLocalScale: {x: 1, y: 1, z: 1}
   stripInitialPoseCaptured: 0
+  stripAssemblyInitialLocalPosition: {x: 0, y: 0, z: 0}
+  stripAssemblyInitialLocalRotation: {x: 0, y: 0, z: 0, w: 0}
+  stripAssemblyInitialLocalScale: {x: 1, y: 1, z: 1}
+  stripAssemblyInitialPoseCaptured: 0
   swabInitialWorldPos: {x: 0, y: 0, z: 0}
   swabInitialWorldRot: {x: 0, y: 0, z: 0, w: 0}
   swabInitialLocalScale: {x: 1, y: 1, z: 1}

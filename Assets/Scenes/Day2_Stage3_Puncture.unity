@@ -646,6 +646,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7e98607589e1af458d61b9fa150293f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentDay: 2
   stageIndex: 3
   stageTitle: "\u9636\u6BB53\uFF1A\u624E\u624B\u6307\u6D4B\u8840\u7CD6"
   stageDescription: "\u5C06\u68C9\u7B7E\u62D6\u5230\u4E2D\u6307\u9644\u8FD1\uFF0C\u68C9\u7B7E\u4F1A\u81EA\u52A8\u4E0A\u4E0B\u64E6\u62ED
@@ -667,6 +668,12 @@ MonoBehaviour:
   penPickRadiusPixels: 120
   penSnapDistance: 0.6
   penReturnSeconds: 0.3
+  swabArrows:
+    start: {x: 0, y: 0}
+    end: {x: -32, y: 10}
+  penArrows:
+    start: {x: 0, y: 0}
+    end: {x: -27, y: -45}
   gameManager: {fileID: 0}
 --- !u!4 &1107228366
 Transform:

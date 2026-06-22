@@ -27,6 +27,12 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
     [SerializeField] private float penSnapDistance = 0.6f;
     [SerializeField] private float penReturnSeconds = 0.3f;
 
+    [Header("Drag Arrow UI Offsets (Pixels)")]
+    [SerializeField] private Day2DragArrowOffsets swabArrows =
+        new Day2DragArrowOffsets(Vector2.zero, new Vector2(-22f, 0f));
+    [SerializeField] private Day2DragArrowOffsets penArrows =
+        new Day2DragArrowOffsets(Vector2.zero, new Vector2(-22f, 0f));
+
     [SerializeField] private GameManager gameManager;
 
     private bool autoLoadQueued;
@@ -55,6 +61,8 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
     private GUIStyle uiLineStyle;
     private GUIStyle uiPrimaryStyle;
     private GUIStyle uiHintStyle;
+    private Day2DragArrowOverlay dragArrowOverlay;
+    private Day4StageHintGate hintGate;
 
     private void Awake()
     {
@@ -64,7 +72,9 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
         }
 
         gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
+        hintGate = Day4StageHintGate.Ensure(gameObject, currentDay, gameManager);
         ResolveRuntimeReferences();
+        dragArrowOverlay = Day2DragArrowOverlay.Ensure(gameObject, mainCamera);
         CaptureSwabInitialPose();
         CapturePenInitialPose();
         swabStepCompleted = false;
@@ -84,6 +94,8 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
 
     private void Update()
     {
+        UpdateDragArrowTargets();
+
         if (IsStage3())
         {
             if (!swabStepCompleted)
@@ -128,6 +140,37 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
 
         autoLoadQueued = false;
         gameManager.LoadScene(nextSceneName);
+    }
+
+    private void UpdateDragArrowTargets()
+    {
+        if (dragArrowOverlay == null || !IsStage3() || stage3InteractionCompleted || !IsGuidanceVisible())
+        {
+            dragArrowOverlay?.Hide();
+            return;
+        }
+
+        if (!swabStepCompleted && cottonSwab != null && TryGetMiddleFingerAnchor(out Vector3 fingerAnchor))
+        {
+            dragArrowOverlay.Show(
+                Day2DragArrowOverlay.GetVisualCenter(cottonSwab),
+                fingerAnchor,
+                swabArrows.start,
+                swabArrows.end);
+            return;
+        }
+
+        if (swabStepCompleted && !penPlacedAtTarget && lancingPen != null && penTargetPoint != null)
+        {
+            dragArrowOverlay.Show(
+                Day2DragArrowOverlay.GetVisualCenter(lancingPen),
+                penTargetPoint.position,
+                penArrows.start,
+                penArrows.end);
+            return;
+        }
+
+        dragArrowOverlay.Hide();
     }
 
     private void HandleStage3SwabInteraction()
@@ -650,7 +693,7 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!IsStage3())
+        if (!IsStage3() || !IsGuidanceVisible())
         {
             return;
         }
@@ -692,6 +735,11 @@ public sealed class Day2StagePlaceholderController : MonoBehaviour
         }
 
         return string.Empty;
+    }
+
+    private bool IsGuidanceVisible()
+    {
+        return hintGate == null || hintGate.GuidanceVisible;
     }
 
     private void EnsureUiStyles()

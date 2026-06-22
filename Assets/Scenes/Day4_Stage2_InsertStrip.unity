@@ -753,6 +753,21 @@ MonoBehaviour:
   recordedStripSnapWorldEuler: {x: 0, y: 270, z: 0}
   recordedStripSnapLocalScale: {x: 1, y: 1, z: 1}
   autoResolveNiproProps: 1
+  capToTrayArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
+  lancetInstallArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 3}
+  safetyCapArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
+  penCapReattachArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
+  testStripArrows:
+    start: {x: 0, y: 0}
+    end: {x: 0, y: 0}
   gameManager: {fileID: 0}
   currentStep: 5
   currentDepthLevel: 1

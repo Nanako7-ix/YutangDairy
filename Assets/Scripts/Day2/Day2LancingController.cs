@@ -81,6 +81,14 @@ public sealed class Day2LancingController : MonoBehaviour
     [SerializeField] private Vector3 recordedStripSnapLocalScale = Vector3.one;
     [SerializeField] private bool autoResolveNiproProps = true;
 
+    [Header("Drag Arrow UI Offsets (Pixels)")]
+    [SerializeField] private Day2DragArrowOffsets capToTrayArrows;
+    [SerializeField] private Day2DragArrowOffsets lancetInstallArrows =
+        new Day2DragArrowOffsets(Vector2.zero, new Vector2(0f, 3f));
+    [SerializeField] private Day2DragArrowOffsets safetyCapArrows;
+    [SerializeField] private Day2DragArrowOffsets penCapReattachArrows;
+    [SerializeField] private Day2DragArrowOffsets testStripArrows;
+
     [Header("Runtime State")]
     [SerializeField] private GameManager gameManager;
     [SerializeField] private int currentStep;
@@ -145,6 +153,8 @@ public sealed class Day2LancingController : MonoBehaviour
     private GUIStyle uiPrimaryStyle;
     private GUIStyle uiHintStyle;
     private GUIStyle uiButtonStyle;
+    private Day2DragArrowOverlay dragArrowOverlay;
+    private Day4StageHintGate hintGate;
 
     private void OnValidate()
     {
@@ -169,8 +179,10 @@ public sealed class Day2LancingController : MonoBehaviour
         }
 
         gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
+        hintGate = Day4StageHintGate.Ensure(gameObject, currentDay, gameManager);
         ResolveLancetRuntimeReferences();
         ResolveMeterAndStripReferences();
+        dragArrowOverlay = Day2DragArrowOverlay.Ensure(gameObject, mainCamera);
         CaptureInitialPosesIfNeeded();
         TouchSerializedFieldsForWip();
         targetDepthLevel = Mathf.Clamp(targetDepthLevel, MinDepthLevel, MaxDepthLevel);
@@ -193,6 +205,8 @@ public sealed class Day2LancingController : MonoBehaviour
 
     private void Update()
     {
+        UpdateDragArrowTargets();
+
         if (IsCurrentStageComplete())
         {
             TryAutoLoadNextScene();
@@ -239,11 +253,74 @@ public sealed class Day2LancingController : MonoBehaviour
         }
     }
 
+    private void UpdateDragArrowTargets()
+    {
+        if (dragArrowOverlay == null || !IsGuidanceVisible())
+        {
+            dragArrowOverlay?.Hide();
+            return;
+        }
+
+        Transform start = null;
+        Transform end = null;
+        Vector3 endPosition = Vector3.zero;
+        Vector2 startArrowOffset = Vector2.zero;
+        Vector2 endArrowOffset = Vector2.zero;
+        bool useWorldEndPosition = false;
+
+        switch (currentStep)
+        {
+            case StepMoveCapToTrayA:
+                start = penCap;
+                end = trayPointA;
+                startArrowOffset = capToTrayArrows.start;
+                endArrowOffset = capToTrayArrows.end;
+                break;
+            case StepInstallLancet:
+                start = GetLancetDragTarget();
+                end = lancetDock;
+                startArrowOffset = lancetInstallArrows.start;
+                endArrowOffset = lancetInstallArrows.end;
+                break;
+            case StepLancetInstalled:
+                start = safetyCap;
+                end = trayPointB;
+                startArrowOffset = safetyCapArrows.start;
+                endArrowOffset = safetyCapArrows.end;
+                break;
+            case StepSafetyCapOnTrayB:
+                start = penCap;
+                endPosition = penCapAttachedWorldPos;
+                useWorldEndPosition = true;
+                startArrowOffset = penCapReattachArrows.start;
+                endArrowOffset = penCapReattachArrows.end;
+                break;
+            case StepDepthLocked:
+                start = testStrip;
+                end = testStripDock;
+                startArrowOffset = testStripArrows.start;
+                endArrowOffset = testStripArrows.end;
+                break;
+        }
+
+        if (start == null || (!useWorldEndPosition && end == null))
+        {
+            dragArrowOverlay.Hide();
+            return;
+        }
+
+        dragArrowOverlay.Show(
+            Day2DragArrowOverlay.GetVisualCenter(start),
+            useWorldEndPosition ? endPosition : end.position,
+            startArrowOffset,
+            endArrowOffset);
+    }
+
     private void OnGUI()
     {
         EnsureUiStyles();
 
-        string operation = GetOperationText();
+        string operation = IsGuidanceVisible() ? GetOperationText() : string.Empty;
         if (!string.IsNullOrEmpty(operation))
         {
             float width = Mathf.Clamp(Screen.width - 140f, 720f, 980f);
@@ -255,7 +332,15 @@ public sealed class Day2LancingController : MonoBehaviour
             GUILayout.EndArea();
         }
 
-        DrawDepthAdjustPanel();
+        if (IsGuidanceVisible())
+        {
+            DrawDepthAdjustPanel();
+        }
+    }
+
+    private bool IsGuidanceVisible()
+    {
+        return hintGate == null || hintGate.GuidanceVisible;
     }
 
     private bool IsCurrentStageComplete()

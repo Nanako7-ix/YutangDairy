@@ -49,6 +49,7 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
     private GUIStyle uiLineStyle;
     private GUIStyle uiPrimaryStyle;
     private GUIStyle uiHintStyle;
+    private Day4StageHintGate hintGate;
 
     private void Awake()
     {
@@ -58,6 +59,7 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
         }
 
         gameManager.MarkCurrentDay(Mathf.Max(1, currentDay));
+        hintGate = Day4StageHintGate.Ensure(gameObject, currentDay, gameManager);
 
         if (zoneMax < zoneMin)
         {
@@ -214,15 +216,18 @@ public sealed class Day2Stage4SpaceGameController : MonoBehaviour
             return;
         }
 
-        EnsureUiStyles();
+        if (hintGate == null || hintGate.GuidanceVisible)
+        {
+            EnsureUiStyles();
 
-        float width = Mathf.Clamp(Screen.width - 140f, 720f, 980f);
-        Rect panel = new Rect((Screen.width - width) * 0.5f, 32f, width, 64f);
-        DrawUiPanel(panel);
+            float width = Mathf.Clamp(Screen.width - 140f, 720f, 980f);
+            Rect panel = new Rect((Screen.width - width) * 0.5f, 32f, width, 64f);
+            DrawUiPanel(panel);
 
-        GUILayout.BeginArea(GetPaddedRect(panel, 24f, 14f));
-        GUILayout.Label("保持光标在绿色区域", uiPrimaryStyle);
-        GUILayout.EndArea();
+            GUILayout.BeginArea(GetPaddedRect(panel, 24f, 14f));
+            GUILayout.Label("保持光标在绿色区域", uiPrimaryStyle);
+            GUILayout.EndArea();
+        }
 
         DrawGauge();
     }

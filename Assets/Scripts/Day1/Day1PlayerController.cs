@@ -6,14 +6,29 @@ public sealed class Day1PlayerController : MonoBehaviour
     [SerializeField] private float moveSpeed = 6f;
     [SerializeField] private float rotationSpeed = 16f;
     [SerializeField] private bool rotateTowardMoveDirection = true;
+    [SerializeField] private Animator movementAnimator;
+    [SerializeField] private float animationDampSeconds = 0.08f;
+    [SerializeField] private bool lockVerticalPosition = true;
 
     private CharacterController characterController;
+    private float lockedY;
+    private static readonly int SpeedParameter = Animator.StringToHash("Speed");
 
     public bool InputLocked { get; set; }
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        lockedY = transform.position.y;
+        if (lockVerticalPosition)
+        {
+            characterController.stepOffset = 0f;
+        }
+
+        if (movementAnimator == null)
+        {
+            movementAnimator = GetComponentInChildren<Animator>(true);
+        }
     }
 
     private void Update()
@@ -38,5 +53,31 @@ public sealed class Day1PlayerController : MonoBehaviour
         }
 
         characterController.Move(move * (moveSpeed * Time.deltaTime));
+        KeepVerticalPositionLocked();
+
+        if (movementAnimator != null)
+        {
+            movementAnimator.SetFloat(
+                SpeedParameter,
+                move.magnitude,
+                Mathf.Max(0f, animationDampSeconds),
+                Time.deltaTime);
+        }
+    }
+
+    private void KeepVerticalPositionLocked()
+    {
+        if (!lockVerticalPosition || Mathf.Abs(transform.position.y - lockedY) < 0.0001f)
+        {
+            return;
+        }
+
+        Vector3 position = transform.position;
+        position.y = lockedY;
+
+        bool wasEnabled = characterController.enabled;
+        characterController.enabled = false;
+        transform.position = position;
+        characterController.enabled = wasEnabled;
     }
 }
